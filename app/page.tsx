@@ -1,3 +1,5 @@
+"use client"
+
 import { AppLayout } from "@/components/layout/app-layout"
 import { Container } from "@/components/layout/container"
 import { Section } from "@/components/layout/section"
