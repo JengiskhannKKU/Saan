@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'url'
-import { dirname } from 'path'
+import { dirname, join } from 'path'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -23,7 +23,7 @@ const nextConfig = {
         buildDependencies: {
           config: [__filename],
         },
-        cacheDirectory: '.next/cache/webpack',
+        cacheDirectory: join(__dirname, '.next/cache/webpack'),
         // Reduce memory usage for large strings
         compression: 'gzip',
         maxMemoryGenerations: 1,
