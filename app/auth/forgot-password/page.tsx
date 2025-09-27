@@ -4,7 +4,6 @@ import type React from "react"
 
 import { useState } from "react"
 import Link from "next/link"
-import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -39,70 +38,41 @@ export default function ForgotPasswordPage() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen auth-gradient-bg flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-sm"
-        >
-          <div className="bg-white dark:bg-auth-card rounded-3xl p-8 auth-card-shadow text-center">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, duration: 0.5, type: "spring" }}
-              className="inline-flex items-center justify-center w-20 h-20 bg-green-100 dark:bg-green-900/20 rounded-full mb-6"
-            >
-              <CheckCircle className="w-10 h-10 text-green-600 dark:text-green-400" />
-            </motion.div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-sm">
+          <div className="bg-white rounded-2xl p-8 shadow-sm text-center">
+            {/* Success Icon */}
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="w-12 h-12 text-green-600" />
+            </div>
 
-            <h1 className="text-2xl font-light text-foreground tracking-wide mb-2">saan</h1>
+            <div className="text-2xl font-bold text-gray-800 mb-2" style={{ fontFamily: "serif" }}>
+              saan
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4, duration: 0.5 }}
-              className="space-y-4"
-            >
-              <h2 className="text-xl font-semibold text-foreground">Check your email</h2>
-              <p className="text-sm text-auth-text-muted leading-relaxed">
-                We've sent a password reset link to <strong>{email}</strong>. Click the link in the email to reset your
-                password.
-              </p>
-            </motion.div>
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Check your email</h2>
+            <p className="text-sm text-gray-600 leading-relaxed mb-8">
+              We've sent a password reset link to <strong>{email}</strong>. Click the link in the email to reset your
+              password.
+            </p>
 
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6, duration: 0.5 }}
-              className="mt-8"
-            >
-              <Button
-                asChild
-                className="w-full h-12 bg-auth-button hover:bg-auth-button-hover text-white rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
-              >
-                <Link href="/auth/login">Back to Login</Link>
-              </Button>
-            </motion.div>
+            <Button asChild className="w-full h-12 bg-gray-800 hover:bg-gray-900 text-white rounded-lg font-medium">
+              <Link href="/auth/login">Back to Login</Link>
+            </Button>
           </div>
-        </motion.div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen auth-gradient-bg flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-sm"
-      >
-        <div className="bg-white dark:bg-auth-card rounded-3xl p-8 auth-card-shadow">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
+        <div className="bg-white rounded-2xl p-8 shadow-sm">
           {/* Back Button */}
           <Link
             href="/auth/login"
-            className="inline-flex items-center text-sm text-auth-text-muted hover:text-primary transition-colors mb-6"
+            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-800 transition-colors mb-6"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to login
@@ -110,68 +80,50 @@ export default function ForgotPasswordPage() {
 
           {/* Logo */}
           <div className="text-center mb-8">
-            <motion.div
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, duration: 0.3 }}
-              className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-2xl mb-4"
-            >
-              <Mail className="w-8 h-8 text-primary" />
-            </motion.div>
-            <h1 className="text-2xl font-light text-foreground tracking-wide">saan</h1>
-            <p className="text-sm text-auth-text-muted mt-2">Reset your password</p>
+            <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Mail className="w-8 h-8 text-blue-600" />
+            </div>
+            <div className="text-2xl font-bold text-gray-800" style={{ fontFamily: "serif" }}>
+              saan
+            </div>
+            <p className="text-sm text-gray-600 mt-2">Reset your password</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Field */}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium text-muted-foreground">
+              <Label htmlFor="email" className="text-sm font-medium text-gray-700">
                 Email address
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 h-12 bg-auth-input border-0 rounded-xl focus:ring-2 focus:ring-primary/20 transition-all"
+                  className="pl-10 h-12 border-gray-200 rounded-lg focus:border-gray-400 focus:ring-0"
                   placeholder="Enter your email"
                   required
                 />
               </div>
-              <p className="text-xs text-auth-text-muted">We'll send you a link to reset your password</p>
+              <p className="text-xs text-gray-500">We'll send you a link to reset your password</p>
             </div>
 
             {/* Error Message */}
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-sm text-destructive text-center bg-destructive/10 p-3 rounded-lg"
-              >
-                {error}
-              </motion.div>
-            )}
+            {error && <div className="text-sm text-red-600 text-center bg-red-50 p-3 rounded-lg">{error}</div>}
 
             {/* Submit Button */}
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full h-12 bg-auth-button hover:bg-auth-button-hover text-white rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+              className="w-full h-12 bg-gray-800 hover:bg-gray-900 text-white rounded-lg font-medium"
             >
-              {isLoading ? (
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Sending...</span>
-                </div>
-              ) : (
-                "Send reset link"
-              )}
+              {isLoading ? "Sending..." : "Send reset link"}
             </Button>
           </form>
         </div>
-      </motion.div>
+      </div>
     </div>
   )
 }

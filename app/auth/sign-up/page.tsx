@@ -5,179 +5,217 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useSupabaseAuth } from "@/lib/supabase/auth"
-import { useAppSelector } from "@/lib/redux/hooks"
-import { UserPlus, Mail, Eye, EyeOff, Lock } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
+import { Eye, EyeOff } from "lucide-react"
 
 export default function SignUpPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    password: "",
+    confirmPassword: "",
+  })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const { signUp } = useSupabaseAuth()
-  const { isLoading, error } = useAppSelector((state) => state.auth)
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    const supabase = createClient()
+    setIsLoading(true)
+    setError(null)
 
-    if (password !== confirmPassword) {
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match")
+      setIsLoading(false)
       return
     }
 
-    const { error } = await signUp(email, password)
-    if (!error) {
-      router.push("/auth/sign-up-success")
+    try {
+      const { error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/dashboard`,
+          data: {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            phone: formData.phone,
+          },
+        },
+      })
+      if (error) throw error
+      router.push("/auth/verify-email")
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "An error occurred")
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const passwordsMatch = password === confirmPassword || confirmPassword === ""
-
   return (
-    <div className="min-h-screen auth-gradient-bg flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-sm"
-      >
-        <div className="bg-white dark:bg-auth-card rounded-3xl p-8 auth-card-shadow">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
+        <div className="bg-white rounded-2xl p-8 shadow-sm">
           {/* Logo */}
           <div className="text-center mb-8">
-            <motion.div
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, duration: 0.3 }}
-              className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-2xl mb-4"
-            >
-              <UserPlus className="w-8 h-8 text-primary" />
-            </motion.div>
-            <h1 className="text-2xl font-light text-foreground tracking-wide">saan</h1>
-            <p className="text-sm text-auth-text-muted mt-2">Create your account</p>
+            <div className="text-2xl font-bold text-gray-800 mb-2" style={{ fontFamily: "serif" }}>
+              saan
+            </div>
+            <h1 className="text-xl font-semibold text-gray-800 mb-2">Create Account</h1>
+            <p className="text-sm text-gray-500">Join us today! Please fill in your details</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email Field */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* First Name */}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium text-muted-foreground">
-                Email
+              <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">
+                First Name
               </Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 h-12 bg-auth-input border-0 rounded-xl focus:ring-2 focus:ring-primary/20 transition-all"
-                  placeholder="Enter your email"
-                  required
-                />
-              </div>
+              <Input
+                id="firstName"
+                type="text"
+                value={formData.firstName}
+                onChange={(e) => handleInputChange("firstName", e.target.value)}
+                className="h-12 border-gray-200 rounded-lg focus:border-gray-400 focus:ring-0"
+                placeholder="Enter your first name"
+                required
+              />
             </div>
 
-            {/* Password Field */}
+            {/* Last Name */}
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium text-muted-foreground">
+              <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">
+                Last Name
+              </Label>
+              <Input
+                id="lastName"
+                type="text"
+                value={formData.lastName}
+                onChange={(e) => handleInputChange("lastName", e.target.value)}
+                className="h-12 border-gray-200 rounded-lg focus:border-gray-400 focus:ring-0"
+                placeholder="Enter your last name"
+                required
+              />
+            </div>
+
+            {/* Email */}
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleInputChange("email", e.target.value)}
+                className="h-12 border-gray-200 rounded-lg focus:border-gray-400 focus:ring-0"
+                placeholder="Enter your email"
+                required
+              />
+            </div>
+
+            {/* Phone */}
+            <div className="space-y-2">
+              <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
+                Phone Number
+              </Label>
+              <Input
+                id="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => handleInputChange("phone", e.target.value)}
+                className="h-12 border-gray-200 rounded-lg focus:border-gray-400 focus:ring-0"
+                placeholder="Enter your phone number"
+                required
+              />
+            </div>
+
+            {/* Password */}
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-sm font-medium text-gray-700">
                 Password
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 pr-10 h-12 bg-auth-input border-0 rounded-xl focus:ring-2 focus:ring-primary/20 transition-all"
+                  value={formData.password}
+                  onChange={(e) => handleInputChange("password", e.target.value)}
+                  className="h-12 border-gray-200 rounded-lg focus:border-gray-400 focus:ring-0 pr-10"
                   placeholder="Create a password"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
             </div>
 
-            {/* Confirm Password Field */}
+            {/* Confirm Password */}
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-sm font-medium text-muted-foreground">
+              <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
                 Confirm Password
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className={`pl-10 pr-10 h-12 bg-auth-input border-0 rounded-xl focus:ring-2 transition-all ${
-                    passwordsMatch ? "focus:ring-primary/20" : "focus:ring-destructive/20 ring-2 ring-destructive/20"
-                  }`}
+                  value={formData.confirmPassword}
+                  onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                  className="h-12 border-gray-200 rounded-lg focus:border-gray-400 focus:ring-0 pr-10"
                   placeholder="Confirm your password"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-              {!passwordsMatch && confirmPassword && <p className="text-xs text-destructive">Passwords do not match</p>}
             </div>
 
             {/* Error Message */}
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-sm text-destructive text-center bg-destructive/10 p-3 rounded-lg"
-              >
-                {error}
-              </motion.div>
-            )}
+            {error && <div className="text-sm text-red-600 text-center bg-red-50 p-3 rounded-lg">{error}</div>}
 
             {/* Sign Up Button */}
             <Button
               type="submit"
-              disabled={isLoading || !passwordsMatch}
-              className="w-full h-12 bg-auth-button hover:bg-auth-button-hover text-white rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
+              disabled={isLoading}
+              className="w-full h-12 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium"
             >
-              {isLoading ? (
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Creating account...</span>
-                </div>
-              ) : (
-                "Sign up"
-              )}
+              {isLoading ? "สร้างบัญชี..." : "สมัครสมาชิก"}
             </Button>
           </form>
 
           {/* Login Link */}
-          <div className="mt-8 text-center">
-            <p className="text-sm text-auth-text-muted">
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
               Already have an account?{" "}
-              <Link
-                href="/auth/login"
-                className="text-primary hover:text-auth-button-hover font-medium transition-colors"
-              >
+              <Link href="/auth/login" className="text-gray-800 font-medium hover:underline">
                 Log in
               </Link>
             </p>
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   )
 }

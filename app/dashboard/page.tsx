@@ -1,131 +1,170 @@
-import { AppLayout } from "@/components/layout/app-layout"
-import { Container } from "@/components/layout/container"
-import { Section } from "@/components/layout/section"
-import { Grid, GridItem } from "@/components/layout/grid"
-import { ResponsiveCard } from "@/components/ui/responsive-card"
-import { Typography } from "@mui/material"
-import { TrendingUp, Users, ShoppingCart, DollarSign } from "lucide-react"
+import { createClient } from "@/lib/supabase/server"
+import { redirect } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { User, ShoppingBag, Heart, Settings, LogOut } from "lucide-react"
+import Link from "next/link"
 
-const stats = [
-  {
-    title: "Total Revenue",
-    value: "$45,231.89",
-    change: "+20.1%",
-    icon: DollarSign,
-  },
-  {
-    title: "Active Users",
-    value: "2,350",
-    change: "+180.1%",
-    icon: Users,
-  },
-  {
-    title: "Sales",
-    value: "12,234",
-    change: "+19%",
-    icon: ShoppingCart,
-  },
-  {
-    title: "Growth",
-    value: "573",
-    change: "+201%",
-    icon: TrendingUp,
-  },
-]
+export default async function DashboardPage() {
+  const supabase = await createClient()
 
-export default function DashboardPage() {
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser()
+
+  if (error || !user) {
+    redirect("/auth/login")
+  }
+
+  const menuItems = [
+    { icon: User, label: "โปรไฟล์", href: "/profile", color: "text-blue-600" },
+    { icon: ShoppingBag, label: "คำสั่งซื้อ", href: "/orders", color: "text-green-600" },
+    { icon: Heart, label: "รายการโปรด", href: "/favorites", color: "text-red-600" },
+    { icon: Settings, label: "ตั้งค่า", href: "/settings", color: "text-gray-600" },
+  ]
+
+  const recentOrders = [
+    { id: "ORD001", item: "กระถางดิน", price: "฿159", status: "กำลังจัดส่ง", date: "15 ม.ค. 2025" },
+    { id: "ORD002", item: "ชุดชาไม้", price: "฿169", status: "สำเร็จ", date: "12 ม.ค. 2025" },
+    { id: "ORD003", item: "ผ้าทอมือลายไทย", price: "฿459", status: "รอการชำระ", date: "10 ม.ค. 2025" },
+  ]
+
+  const handleSignOut = async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    redirect("/auth/login")
+  }
+
   return (
-    <AppLayout>
-      <Section padding="lg">
-        <Container maxWidth="xl">
-          <div className="mb-8">
-            <Typography variant="h4" className="text-foreground font-bold mb-2">
-              {"Dashboard"}
-            </Typography>
-            <Typography variant="body1" className="text-muted-foreground">
-              {"Welcome back! Here's what's happening with your application."}
-            </Typography>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm">
+        <div className="flex items-center justify-between px-4 py-4">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="text-2xl font-bold text-gray-800" style={{ fontFamily: "serif" }}>
+              saan
+            </Link>
           </div>
+          <form action={handleSignOut}>
+            <Button variant="ghost" size="sm" type="submit">
+              <LogOut className="h-5 w-5" />
+            </Button>
+          </form>
+        </div>
+      </header>
 
-          <Grid cols={{ default: 1, sm: 2, lg: 4 }} gap="lg" className="mb-8">
-            {stats.map((stat) => (
-              <GridItem key={stat.title}>
-                <ResponsiveCard hover animate>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Typography variant="body2" className="text-muted-foreground mb-1">
-                        {stat.title}
-                      </Typography>
-                      <Typography variant="h5" className="text-foreground font-bold">
-                        {stat.value}
-                      </Typography>
-                      <Typography variant="body2" className="text-green-600 font-medium">
-                        {stat.change}
-                      </Typography>
-                    </div>
-                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <stat.icon className="w-6 h-6 text-primary" />
-                    </div>
+      <div className="p-4">
+        {/* Welcome Section */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">
+            สวัสดี, {user.user_metadata?.first_name || user.email?.split("@")[0]}!
+          </h1>
+          <p className="text-gray-600">ยินดีต้อนรับสู่แดชบอร์ดของคุณ</p>
+        </div>
+
+        {/* User Info Card */}
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
+                <User className="w-8 h-8 text-gray-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-800">
+                  {user.user_metadata?.first_name} {user.user_metadata?.last_name}
+                </h3>
+                <p className="text-gray-600 text-sm">{user.email}</p>
+                <p className="text-gray-500 text-xs">
+                  สมาชิกตั้งแต่: {new Date(user.created_at).toLocaleDateString("th-TH")}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Menu Grid */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          {menuItems.map((item) => (
+            <Link key={item.label} href={item.href}>
+              <Card className="hover:shadow-md transition-shadow">
+                <CardContent className="p-6 text-center">
+                  <item.icon className={`w-8 h-8 mx-auto mb-3 ${item.color}`} />
+                  <p className="font-medium text-gray-800">{item.label}</p>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+
+        {/* Recent Orders */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-gray-800">คำสั่งซื้อล่าสุด</h3>
+              <Link href="/orders">
+                <Button variant="ghost" size="sm" className="text-gray-600">
+                  ดูทั้งหมด
+                </Button>
+              </Link>
+            </div>
+
+            <div className="space-y-4">
+              {recentOrders.map((order) => (
+                <div
+                  key={order.id}
+                  className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
+                >
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-800">{order.item}</p>
+                    <p className="text-sm text-gray-600">
+                      #{order.id} • {order.date}
+                    </p>
                   </div>
-                </ResponsiveCard>
-              </GridItem>
-            ))}
-          </Grid>
-
-          <Grid cols={{ default: 1, lg: 2 }} gap="lg">
-            <GridItem>
-              <ResponsiveCard
-                header={
-                  <Typography variant="h6" className="text-foreground font-semibold">
-                    {"Recent Activity"}
-                  </Typography>
-                }
-                animate
-              >
-                <div className="space-y-4">
-                  {[1, 2, 3, 4].map((item) => (
-                    <div key={item} className="flex items-center space-x-4">
-                      <div className="w-2 h-2 bg-primary rounded-full" />
-                      <div className="flex-1">
-                        <Typography variant="body2" className="text-foreground">
-                          {`Activity item ${item}`}
-                        </Typography>
-                        <Typography variant="caption" className="text-muted-foreground">
-                          {"2 hours ago"}
-                        </Typography>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </ResponsiveCard>
-            </GridItem>
-
-            <GridItem>
-              <ResponsiveCard
-                header={
-                  <Typography variant="h6" className="text-foreground font-semibold">
-                    {"Quick Actions"}
-                  </Typography>
-                }
-                animate
-              >
-                <div className="grid grid-cols-2 gap-4">
-                  {["Create", "Import", "Export", "Settings"].map((action) => (
-                    <button
-                      key={action}
-                      className="p-4 bg-muted hover:bg-accent rounded-lg transition-colors text-center"
+                  <div className="text-right">
+                    <p className="font-semibold text-gray-800">{order.price}</p>
+                    <span
+                      className={`text-xs px-2 py-1 rounded-full ${
+                        order.status === "สำเร็จ"
+                          ? "bg-green-100 text-green-800"
+                          : order.status === "กำลังจัดส่ง"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-yellow-100 text-yellow-800"
+                      }`}
                     >
-                      <Typography variant="body2" className="text-foreground font-medium">
-                        {action}
-                      </Typography>
-                    </button>
-                  ))}
+                      {order.status}
+                    </span>
+                  </div>
                 </div>
-              </ResponsiveCard>
-            </GridItem>
-          </Grid>
-        </Container>
-      </Section>
-    </AppLayout>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
+        <div className="flex items-center justify-around">
+          <Link href="/">
+            <Button variant="ghost" size="sm" className="flex flex-col items-center gap-1">
+              <div className="w-6 h-6 bg-gray-400 rounded"></div>
+              <span className="text-xs text-gray-400">Home</span>
+            </Button>
+          </Link>
+          <Button variant="ghost" size="sm" className="flex flex-col items-center gap-1">
+            <ShoppingBag className="w-5 h-5 text-gray-400" />
+            <span className="text-xs text-gray-400">Orders</span>
+          </Button>
+          <Button variant="ghost" size="sm" className="flex flex-col items-center gap-1">
+            <Heart className="w-5 h-5 text-gray-400" />
+            <span className="text-xs text-gray-400">Favorites</span>
+          </Button>
+          <Button variant="ghost" size="sm" className="flex flex-col items-center gap-1">
+            <User className="w-5 h-5 text-gray-800" />
+            <span className="text-xs text-gray-800">Profile</span>
+          </Button>
+        </div>
+      </div>
+    </div>
   )
 }

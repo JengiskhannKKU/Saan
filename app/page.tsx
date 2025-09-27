@@ -1,186 +1,249 @@
 "use client"
 
-import { AppLayout } from "@/components/layout/app-layout"
-import { Container } from "@/components/layout/container"
-import { Section } from "@/components/layout/section"
-import { Grid, GridItem } from "@/components/layout/grid"
-import { Flex } from "@/components/layout/flex"
-import { ResponsiveCard } from "@/components/ui/responsive-card"
-import { ResponsiveWrapper } from "@/components/layout/responsive-wrapper"
+import { useState, useEffect } from "react"
+import { Search, ShoppingCart, User, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Typography } from "@mui/material"
-import {
-  Smartphone as SmartphoneIcon,
-  Tablet as TabletIcon,
-  Computer as ComputerIcon,
-  Speed as SpeedIcon,
-  Security as SecurityIcon,
-  Palette as PaletteIcon,
-} from "@mui/icons-material"
+import { Card, CardContent } from "@/components/ui/card"
+import { createClient } from "@/lib/supabase/client"
+import Link from "next/link"
 
-const features = [
+const categories = [
+  { id: "pottery", name: "เครื่องปั้นดินเผา", active: true },
+  { id: "wood", name: "ไม้", active: false },
+  { id: "accessories", name: "เครื่องประดับ", active: false },
+  { id: "fabric", name: "ผ้า", active: false },
+]
+
+const products = [
   {
-    icon: SmartphoneIcon,
-    title: "Mobile First",
-    description: "Designed with mobile users in mind, ensuring perfect experience on all devices.",
+    id: 1,
+    name: "กระถางดิน",
+    price: "฿159",
+    image: "/ceramic-pottery-pot.jpg",
+    rating: 4.5,
+    sold: "ขายแล้ว 50+",
   },
   {
-    icon: TabletIcon,
-    title: "Responsive Design",
-    description: "Seamlessly adapts to any screen size with fluid layouts and flexible components.",
+    id: 2,
+    name: "ชุดชาไม้",
+    price: "฿169",
+    image: "/wooden-tea-set.jpg",
+    rating: 4.8,
+    sold: "ขายแล้ว 30+",
   },
   {
-    icon: ComputerIcon,
-    title: "Desktop Optimized",
-    description: "Rich desktop experience with advanced features and intuitive navigation.",
+    id: 3,
+    name: "ผ้าทอมือลายไทย",
+    price: "฿459",
+    image: "/thai-handwoven-fabric.jpg",
+    rating: 4.7,
+    sold: "ขายแล้ว 25+",
   },
   {
-    icon: SpeedIcon,
-    title: "High Performance",
-    description: "Built with Next.js and optimized for speed with server-side rendering.",
-  },
-  {
-    icon: SecurityIcon,
-    title: "Secure by Default",
-    description: "Integrated authentication and security features with Supabase backend.",
-  },
-  {
-    icon: PaletteIcon,
-    title: "Modern UI",
-    description: "Beautiful interface combining Material-UI components with Tailwind CSS.",
+    id: 4,
+    name: "ชุดจานไม้",
+    price: "฿179",
+    image: "/wooden-plate-set.jpg",
+    rating: 4.6,
+    sold: "ขายแล้ว 40+",
   },
 ]
 
 export default function HomePage() {
+  const [activeCategory, setActiveCategory] = useState("pottery")
+  const [user, setUser] = useState<any>(null)
+
+  useEffect(() => {
+    const supabase = createClient()
+
+    // Get initial user
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user)
+    })
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
   return (
-    <AppLayout>
-      {/* Hero Section */}
-      <Section padding="xl" background="default">
-        <Container maxWidth="xl">
-          <ResponsiveWrapper
-            mobileLayout={
-              <Flex direction="col" align="center" justify="center" gap="lg" className="text-center">
-                <Typography variant="h3" className="text-foreground font-bold text-balance">
-                  {"Modern Responsive Web Application"}
-                </Typography>
-                <Typography variant="h6" className="text-muted-foreground max-w-md text-pretty">
-                  {
-                    "Built with Next.js, MUI, Tailwind CSS, Framer Motion, Redux, and Supabase for the ultimate development experience."
-                  }
-                </Typography>
-                <Flex direction="col" gap="sm" className="w-full max-w-sm">
-                  <Button size="large" className="w-full">
-                    {"Get Started"}
-                  </Button>
-                  <Button variant="outline" size="large" className="w-full bg-transparent">
-                    {"Learn More"}
-                  </Button>
-                </Flex>
-              </Flex>
-            }
-            desktopLayout={
-              <Flex align="center" justify="between" gap="xl">
-                <div className="flex-1">
-                  <Typography variant="h2" className="text-foreground font-bold mb-6 text-balance">
-                    {"Modern Responsive Web Application"}
-                  </Typography>
-                  <Typography variant="h5" className="text-muted-foreground mb-8 text-pretty">
-                    {
-                      "Built with Next.js, MUI, Tailwind CSS, Framer Motion, Redux, and Supabase for the ultimate development experience."
-                    }
-                  </Typography>
-                  <Flex gap="md">
-                    <Button size="large">{"Get Started"}</Button>
-                    <Button variant="outline" size="large">
-                      {"Learn More"}
-                    </Button>
-                  </Flex>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm sticky top-0 z-50">
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" className="lg:hidden">
+              <Menu className="h-5 w-5" />
+            </Button>
+            <div className="text-2xl font-bold text-gray-800" style={{ fontFamily: "serif" }}>
+              saan
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm">
+              <Search className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="sm">
+              <ShoppingCart className="h-5 w-5" />
+            </Button>
+            {user ? (
+              <Link href="/dashboard">
+                <Button variant="ghost" size="sm">
+                  <User className="h-5 w-5" />
+                </Button>
+              </Link>
+            ) : (
+              <Link href="/auth/login">
+                <Button variant="ghost" size="sm">
+                  <User className="h-5 w-5" />
+                </Button>
+              </Link>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Hero Banner */}
+      <div className="px-4 py-6">
+        <div className="bg-gradient-to-r from-green-400 to-green-500 rounded-2xl p-6 text-white relative overflow-hidden">
+          <div className="relative z-10">
+            <h1 className="text-xl font-bold mb-2">
+              ทุกการช้อปของคุณ
+              <br />
+              คือพลังสนับสนุนการใช้
+            </h1>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-2 h-2 bg-pink-400 rounded-full"></div>
+              <span className="text-sm">ช้อป saan = 1 บาท</span>
+            </div>
+            {user ? (
+              <Link href="/dashboard">
+                <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full">
+                  ไปยังแดชบอร์ด
+                </Button>
+              </Link>
+            ) : (
+              <Link href="/auth/sign-up">
+                <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full">เริ่มต้น</Button>
+              </Link>
+            )}
+          </div>
+          <div className="absolute right-4 top-4 opacity-20">
+            <div className="w-16 h-16 border-2 border-white rounded-full flex items-center justify-center">
+              <div className="w-8 h-8 bg-white rounded-full"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Categories */}
+      <div className="px-4 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-800">ประเภทสินค้า</h2>
+          <Button variant="ghost" size="sm" className="text-gray-500">
+            <span className="mr-1">›</span>
+          </Button>
+        </div>
+
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          {categories.map((category) => (
+            <Button
+              key={category.id}
+              variant={category.active ? "default" : "outline"}
+              size="sm"
+              className={`whitespace-nowrap ${
+                category.active ? "bg-gray-800 text-white" : "bg-white text-gray-600 border-gray-200"
+              }`}
+              onClick={() => setActiveCategory(category.id)}
+            >
+              {category.name}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {/* Products */}
+      <div className="px-4 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-800">สินค้าของเรา</h2>
+          <Button variant="ghost" size="sm" className="text-gray-500">
+            <span className="mr-1">›</span>
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          {products.map((product) => (
+            <Card key={product.id} className="bg-white shadow-sm hover:shadow-md transition-shadow">
+              <CardContent className="p-3">
+                <div className="aspect-square bg-gray-100 rounded-lg mb-3 overflow-hidden">
+                  <img
+                    src={product.image || "/placeholder.svg"}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-                <div className="flex-1 flex justify-center">
-                  <div className="w-96 h-96 bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl flex items-center justify-center">
-                    <Typography variant="h4" className="text-muted-foreground">
-                      {"Hero Image"}
-                    </Typography>
+                <h3 className="font-medium text-gray-800 text-sm mb-1 line-clamp-2">{product.name}</h3>
+                <div className="flex items-center gap-1 mb-2">
+                  <div className="flex">
+                    {[...Array(5)].map((_, i) => (
+                      <span
+                        key={i}
+                        className={`text-xs ${i < Math.floor(product.rating) ? "text-yellow-400" : "text-gray-300"}`}
+                      >
+                        ★
+                      </span>
+                    ))}
                   </div>
+                  <span className="text-xs text-gray-500">({product.rating})</span>
                 </div>
-              </Flex>
-            }
-          />
-        </Container>
-      </Section>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-green-600">{product.price}</span>
+                  <span className="text-xs text-gray-500">{product.sold}</span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
 
-      {/* Features Section */}
-      <Section padding="xl" background="muted">
-        <Container maxWidth="xl">
-          <div className="text-center mb-12">
-            <Typography variant="h3" className="text-foreground font-bold mb-4 text-balance">
-              {"Powerful Features"}
-            </Typography>
-            <Typography variant="h6" className="text-muted-foreground max-w-2xl mx-auto text-pretty">
-              {"Everything you need to build modern, responsive web applications with the latest technologies."}
-            </Typography>
-          </div>
-
-          <Grid cols={{ default: 1, md: 2, lg: 3 }} gap="lg" stagger>
-            {features.map((feature, index) => (
-              <GridItem key={feature.title}>
-                <ResponsiveCard
-                  header={
-                    <Flex align="center" gap="md">
-                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                        <feature.icon className="text-primary" />
-                      </div>
-                      <Typography variant="h6" className="text-foreground font-semibold">
-                        {feature.title}
-                      </Typography>
-                    </Flex>
-                  }
-                  hover
-                  animate
-                >
-                  <Typography variant="body1" className="text-muted-foreground text-pretty">
-                    {feature.description}
-                  </Typography>
-                </ResponsiveCard>
-              </GridItem>
-            ))}
-          </Grid>
-        </Container>
-      </Section>
-
-      {/* CTA Section */}
-      <Section padding="xl" background="default">
-        <Container maxWidth="md">
-          <div className="text-center">
-            <Typography variant="h3" className="text-foreground font-bold mb-4 text-balance">
-              {"Ready to Get Started?"}
-            </Typography>
-            <Typography variant="h6" className="text-muted-foreground mb-8 text-pretty">
-              {"Join thousands of developers building amazing applications with our modern stack."}
-            </Typography>
-            <ResponsiveWrapper
-              mobileLayout={
-                <Flex direction="col" gap="sm" className="max-w-sm mx-auto">
-                  <Button size="large" className="w-full">
-                    {"Start Building"}
-                  </Button>
-                  <Button variant="outline" size="large" className="w-full bg-transparent">
-                    {"View Documentation"}
-                  </Button>
-                </Flex>
-              }
-              desktopLayout={
-                <Flex justify="center" gap="md">
-                  <Button size="large">{"Start Building"}</Button>
-                  <Button variant="outline" size="large">
-                    {"View Documentation"}
-                  </Button>
-                </Flex>
-              }
-            />
-          </div>
-        </Container>
-      </Section>
-    </AppLayout>
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
+        <div className="flex items-center justify-around">
+          <Button variant="ghost" size="sm" className="flex flex-col items-center gap-1">
+            <div className="w-6 h-6 bg-gray-800 rounded"></div>
+            <span className="text-xs text-gray-800">Home</span>
+          </Button>
+          <Button variant="ghost" size="sm" className="flex flex-col items-center gap-1">
+            <Search className="w-5 h-5 text-gray-400" />
+            <span className="text-xs text-gray-400">Search</span>
+          </Button>
+          <Button variant="ghost" size="sm" className="flex flex-col items-center gap-1">
+            <ShoppingCart className="w-5 h-5 text-gray-400" />
+            <span className="text-xs text-gray-400">Cart</span>
+          </Button>
+          {user ? (
+            <Link href="/dashboard">
+              <Button variant="ghost" size="sm" className="flex flex-col items-center gap-1">
+                <User className="w-5 h-5 text-gray-400" />
+                <span className="text-xs text-gray-400">Profile</span>
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/auth/login">
+              <Button variant="ghost" size="sm" className="flex flex-col items-center gap-1">
+                <User className="w-5 h-5 text-gray-400" />
+                <span className="text-xs text-gray-400">Profile</span>
+              </Button>
+            </Link>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }
