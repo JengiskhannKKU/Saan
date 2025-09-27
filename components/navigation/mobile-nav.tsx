@@ -23,7 +23,7 @@ export function MobileNav() {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("md"))
 
-  if (!isMobile) return null
+  // if (!isMobile) return null
 
   const currentIndex = navigationItems.findIndex((item) => item.href === pathname)
 

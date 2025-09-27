@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { User, ShoppingBag, Heart, Settings, LogOut } from "lucide-react"
 import Link from "next/link"
+import { AppLayout } from "@/components/layout/app-layout"
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -32,7 +33,7 @@ export default async function DashboardPage() {
 
   const handleSignOut = async () => {
     const supabase = createClient()
-    await supabase.auth.signOut()
+    await (await supabase).auth.signOut()
     redirect("/auth/login")
   }
 
