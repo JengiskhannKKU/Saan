@@ -10,9 +10,10 @@ import { Suspense } from "react"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "Next.js Responsive App",
-  description: "Modern responsive web application with MUI, Tailwind, Motion, and Redux",
-  generator: "v0.app",
+  title: "Saan",
+  icons: {
+    icon: "/saan_web_logo.jpg",
+  },
 }
 
 export default function RootLayout({
