@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import React from "react"
-import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import React from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import {
   AppBar,
   Toolbar,
@@ -22,7 +22,7 @@ import {
   Box,
   useMediaQuery,
   useTheme,
-} from "@mui/material"
+} from "@mui/material";
 import {
   Menu as MenuIcon,
   Close as CloseIcon,
@@ -36,95 +36,109 @@ import {
   LightMode as LightModeIcon,
   DarkMode as DarkModeIcon,
   Computer as ComputerIcon,
-} from "@mui/icons-material"
-import { useTheme as useNextTheme } from "next-themes"
-import { useAppSelector, useAppDispatch } from "@/lib/redux/hooks"
+} from "@mui/icons-material";
+import { useTheme as useNextTheme } from "next-themes";
+import { useAppSelector, useAppDispatch } from "@/lib/redux/hooks";
 import {
   selectUser,
   selectIsAuthenticated,
   selectMobileMenuOpen,
   selectNotifications,
   selectUnreadNotifications,
-} from "@/lib/redux/selectors"
-import { toggleMobileMenu, setMobileMenuOpen } from "@/lib/redux/slices/ui-slice"
-import { useSupabaseAuth } from "@/lib/supabase/auth"
+} from "@/lib/redux/selectors";
+import {
+  toggleMobileMenu,
+  setMobileMenuOpen,
+} from "@/lib/redux/slices/ui-slice";
+import { useSupabaseAuth } from "@/lib/supabase/auth";
+
+import Image from "next/image"
 
 const navigationItems = [
   { name: "Home", href: "/", icon: HomeIcon },
   { name: "Dashboard", href: "/dashboard", icon: DashboardIcon },
   { name: "Profile", href: "/profile", icon: PersonIcon },
   { name: "Settings", href: "/settings", icon: SettingsIcon },
-]
+];
 
 export function Navbar() {
-  const pathname = usePathname()
-  const router = useRouter()
-  const muiTheme = useTheme()
-  const { theme, setTheme } = useNextTheme()
-  const isMobile = useMediaQuery(muiTheme.breakpoints.down("md"))
+  const pathname = usePathname();
+  const router = useRouter();
+  const muiTheme = useTheme();
+  const { theme, setTheme } = useNextTheme();
+  const isMobile = useMediaQuery(muiTheme.breakpoints.down("md"));
 
-  const dispatch = useAppDispatch()
-  const user = useAppSelector(selectUser)
-  const isAuthenticated = useAppSelector(selectIsAuthenticated)
-  const mobileMenuOpen = useAppSelector(selectMobileMenuOpen)
-  const notifications = useAppSelector(selectNotifications)
-  const unreadNotifications = useAppSelector(selectUnreadNotifications)
+  const dispatch = useAppDispatch();
+  const user = useAppSelector(selectUser);
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const mobileMenuOpen = useAppSelector(selectMobileMenuOpen);
+  const notifications = useAppSelector(selectNotifications);
+  const unreadNotifications = useAppSelector(selectUnreadNotifications);
 
-  const { signOut } = useSupabaseAuth()
+  const { signOut } = useSupabaseAuth();
 
-  const [userMenuAnchor, setUserMenuAnchor] = React.useState<null | HTMLElement>(null)
-  const [themeMenuAnchor, setThemeMenuAnchor] = React.useState<null | HTMLElement>(null)
+  const [userMenuAnchor, setUserMenuAnchor] =
+    React.useState<null | HTMLElement>(null);
+  const [themeMenuAnchor, setThemeMenuAnchor] =
+    React.useState<null | HTMLElement>(null);
 
   // Navigation handlers
   const handleNavigate = (href: string) => {
-    router.push(href)
-  }
+    router.push(href);
+  };
 
   const handleMobileNavigate = (href: string) => {
-    dispatch(setMobileMenuOpen(false))
-    setTimeout(() => router.push(href), 100)
-  }
+    dispatch(setMobileMenuOpen(false));
+    setTimeout(() => router.push(href), 100);
+  };
 
   // Menu handlers
   const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setUserMenuAnchor(event.currentTarget)
-  }
+    setUserMenuAnchor(event.currentTarget);
+  };
 
   const handleUserMenuClose = () => {
-    setUserMenuAnchor(null)
-  }
+    setUserMenuAnchor(null);
+  };
 
   const handleThemeMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setThemeMenuAnchor(event.currentTarget)
-  }
+    setThemeMenuAnchor(event.currentTarget);
+  };
 
   const handleThemeMenuClose = () => {
-    setThemeMenuAnchor(null)
-  }
+    setThemeMenuAnchor(null);
+  };
 
   const handleSignOut = async () => {
     try {
-      await signOut()
-      handleUserMenuClose()
+      await signOut();
+      handleUserMenuClose();
     } catch (error) {
-      console.error('Sign out error:', error)
+      console.error("Sign out error:", error);
     }
-  }
+  };
 
   const handleMobileMenuToggle = () => {
-    dispatch(toggleMobileMenu())
-  }
+    dispatch(toggleMobileMenu());
+  };
 
   const handleMobileMenuClose = () => {
-    dispatch(setMobileMenuOpen(false))
-  }
+    dispatch(setMobileMenuOpen(false));
+  };
 
   const handleThemeChange = (newTheme: string) => {
-    setTheme(newTheme)
-    handleThemeMenuClose()
-  }
+    setTheme(newTheme);
+    handleThemeMenuClose();
+  };
 
-  const themeIcon = theme === "dark" ? <DarkModeIcon /> : theme === "light" ? <LightModeIcon /> : <ComputerIcon />
+  const themeIcon =
+    theme === "dark" ? (
+      <DarkModeIcon />
+    ) : theme === "light" ? (
+      <LightModeIcon />
+    ) : (
+      <ComputerIcon />
+    );
 
   return (
     <>
@@ -132,16 +146,16 @@ export function Navbar() {
         position="sticky"
         elevation={0}
         sx={{
-          backgroundColor: '#ffffff',
-          borderBottom: '1px solid #e5e5e5',
-          boxShadow: 'none',
+          backgroundColor: "#ffffff",
+          borderBottom: "1px solid #e5e5e5",
+          boxShadow: "none",
         }}
       >
-        <Toolbar 
-          sx={{ 
-            minHeight: '60px !important',
+        <Toolbar
+          sx={{
+            minHeight: "60px !important",
             px: { xs: 2, sm: 3 },
-            justifyContent: 'space-between'
+            justifyContent: "space-between",
           }}
         >
           {/* Left side - Menu button */}
@@ -149,42 +163,46 @@ export function Navbar() {
             edge="start"
             aria-label="menu"
             onClick={handleMobileMenuToggle}
-            sx={{ 
-              color: '#333333',
+            sx={{
+              color: "#333333",
               p: 1,
-              '&:hover': {
-                backgroundColor: 'rgba(0, 0, 0, 0.04)'
-              }
+              "&:hover": {
+                backgroundColor: "rgba(0, 0, 0, 0.04)",
+              },
             }}
           >
             <MenuIcon sx={{ fontSize: 24 }} />
           </IconButton>
 
           {/* Center - Brand name */}
-          <Box 
-            sx={{ 
-              position: 'absolute',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              cursor: 'pointer'
+          <Box
+            sx={{
+              position: "absolute",
+              left: "50%",
+              transform: "translateX(-50%)",
+              cursor: "pointer",
             }}
-            onClick={() => handleNavigate('/')}
+            onClick={() => handleNavigate("/")}
           >
-            <div className="text-2xl font-bold text-gray-800" style={{ fontFamily: "serif" }}>
-              saan
-            </div>
+            <Image
+              src="/saan_logo.png"
+              alt="Saan Logo"
+              width={100}
+              height={32}
+              priority
+            />
           </Box>
 
           {/* Right side - Icons */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
             {/* Search Icon */}
             <IconButton
-              sx={{ 
-                color: '#333333',
+              sx={{
+                color: "#333333",
                 p: 1,
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                }
+                "&:hover": {
+                  backgroundColor: "rgba(0, 0, 0, 0.04)",
+                },
               }}
             >
               <SearchIcon sx={{ fontSize: 20 }} />
@@ -192,12 +210,12 @@ export function Navbar() {
 
             {/* Shopping Cart Icon */}
             <IconButton
-              sx={{ 
-                color: '#333333',
+              sx={{
+                color: "#333333",
                 p: 1,
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                }
+                "&:hover": {
+                  backgroundColor: "rgba(0, 0, 0, 0.04)",
+                },
               }}
             >
               <ShoppingCartIcon sx={{ fontSize: 20 }} />
@@ -205,20 +223,20 @@ export function Navbar() {
 
             {/* User Avatar */}
             {isAuthenticated ? (
-              <IconButton 
+              <IconButton
                 onClick={handleUserMenuOpen}
-                sx={{ 
+                sx={{
                   p: 0.5,
-                  ml: 0.5
+                  ml: 0.5,
                 }}
               >
                 <Avatar
                   src={user?.avatar_url}
-                  sx={{ 
-                    width: 28, 
-                    height: 28, 
-                    bgcolor: '#333333',
-                    fontSize: '14px'
+                  sx={{
+                    width: 28,
+                    height: 28,
+                    bgcolor: "#333333",
+                    fontSize: "14px",
                   }}
                 >
                   {user?.name?.[0] || user?.email?.[0] || "U"}
@@ -227,13 +245,13 @@ export function Navbar() {
             ) : (
               <IconButton
                 onClick={handleUserMenuOpen}
-                sx={{ 
-                  color: '#333333',
+                sx={{
+                  color: "#333333",
                   p: 1,
                   ml: 0.5,
-                  '&:hover': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                  }
+                  "&:hover": {
+                    backgroundColor: "rgba(0, 0, 0, 0.04)",
+                  },
                 }}
               >
                 <PersonIcon sx={{ fontSize: 20 }} />
@@ -248,102 +266,110 @@ export function Navbar() {
         anchor="left"
         open={mobileMenuOpen}
         onClose={handleMobileMenuClose}
-        sx={{ 
-          '& .MuiDrawer-paper': {
+        sx={{
+          "& .MuiDrawer-paper": {
             width: 280,
-            backgroundColor: '#ffffff',
-            boxShadow: '2px 0 8px rgba(0,0,0,0.1)'
-          }
+            backgroundColor: "#ffffff",
+            boxShadow: "2px 0 8px rgba(0,0,0,0.1)",
+          },
         }}
       >
         {/* Header */}
-        <Box sx={{ 
-          p: 2, 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between',
-          borderBottom: '1px solid #e5e5e5'
-        }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, color: '#333333' }}>
+        <Box
+          sx={{
+            p: 2,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            borderBottom: "1px solid #e5e5e5",
+          }}
+        >
+          <Typography variant="h6" sx={{ fontWeight: 600, color: "#333333" }}>
             Menu
           </Typography>
-          <IconButton 
-            onClick={handleMobileMenuClose} 
+          <IconButton
+            onClick={handleMobileMenuClose}
             size="small"
-            sx={{ color: '#666666' }}
+            sx={{ color: "#666666" }}
           >
             <CloseIcon />
           </IconButton>
         </Box>
-        
+
         {/* Navigation Items */}
         <List sx={{ pt: 1 }}>
           {navigationItems.map((item) => {
-            const isActive = pathname === item.href
-            const IconComponent = item.icon
+            const isActive = pathname === item.href;
+            const IconComponent = item.icon;
             return (
-              <ListItem 
+              <ListItem
                 key={item.name}
                 onClick={() => handleMobileNavigate(item.href)}
                 sx={{
-                  cursor: 'pointer',
+                  cursor: "pointer",
                   py: 1.5,
                   px: 2,
-                  backgroundColor: isActive ? 'rgba(0, 0, 0, 0.04)' : 'transparent',
-                  borderLeft: isActive ? '3px solid #333333' : '3px solid transparent',
-                  '&:hover': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                  }
+                  backgroundColor: isActive
+                    ? "rgba(0, 0, 0, 0.04)"
+                    : "transparent",
+                  borderLeft: isActive
+                    ? "3px solid #333333"
+                    : "3px solid transparent",
+                  "&:hover": {
+                    backgroundColor: "rgba(0, 0, 0, 0.04)",
+                  },
                 }}
               >
-                <ListItemIcon sx={{ 
-                  color: isActive ? '#333333' : '#666666',
-                  minWidth: 40
-                }}>
+                <ListItemIcon
+                  sx={{
+                    color: isActive ? "#333333" : "#666666",
+                    minWidth: 40,
+                  }}
+                >
                   <IconComponent sx={{ fontSize: 22 }} />
                 </ListItemIcon>
-                <ListItemText 
+                <ListItemText
                   primary={item.name}
-                  sx={{ 
-                    '& .MuiListItemText-primary': {
-                      color: isActive ? '#333333' : '#666666',
+                  sx={{
+                    "& .MuiListItemText-primary": {
+                      color: isActive ? "#333333" : "#666666",
                       fontWeight: isActive ? 600 : 400,
-                      fontSize: '15px'
-                    }
+                      fontSize: "15px",
+                    },
                   }}
                 />
               </ListItem>
-            )
+            );
           })}
         </List>
 
         {/* Bottom section */}
-        <Box sx={{ mt: 'auto' }}>
-          <Divider sx={{ borderColor: '#e5e5e5' }} />
-          
+        <Box sx={{ mt: "auto" }}>
+          <Divider sx={{ borderColor: "#e5e5e5" }} />
+
           {/* Theme Toggle */}
           <List>
-            <ListItem 
+            <ListItem
               onClick={handleThemeMenuOpen}
               sx={{
-                cursor: 'pointer',
+                cursor: "pointer",
                 py: 1.5,
                 px: 2,
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                }
+                "&:hover": {
+                  backgroundColor: "rgba(0, 0, 0, 0.04)",
+                },
               }}
             >
-              <ListItemIcon sx={{ color: '#666666', minWidth: 40 }}>
+              <ListItemIcon sx={{ color: "#666666", minWidth: 40 }}>
                 {themeIcon}
               </ListItemIcon>
-              <ListItemText 
+              <ListItemText
                 primary="Theme"
-                sx={{ 
-                  '& .MuiListItemText-primary': {
-                    color: '#666666',
-                    fontSize: '15px'
-                  }
+                sx={{
+                  "& .MuiListItemText-primary": {
+                    color: "#666666",
+                    fontSize: "15px",
+                  },
                 }}
               />
             </ListItem>
@@ -351,27 +377,27 @@ export function Navbar() {
 
           {isAuthenticated && (
             <List>
-              <ListItem 
+              <ListItem
                 onClick={handleSignOut}
                 sx={{
-                  cursor: 'pointer',
+                  cursor: "pointer",
                   py: 1.5,
                   px: 2,
-                  '&:hover': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                  }
+                  "&:hover": {
+                    backgroundColor: "rgba(0, 0, 0, 0.04)",
+                  },
                 }}
               >
-                <ListItemIcon sx={{ color: '#666666', minWidth: 40 }}>
+                <ListItemIcon sx={{ color: "#666666", minWidth: 40 }}>
                   <LogoutIcon sx={{ fontSize: 22 }} />
                 </ListItemIcon>
-                <ListItemText 
+                <ListItemText
                   primary="Sign Out"
-                  sx={{ 
-                    '& .MuiListItemText-primary': {
-                      color: '#666666',
-                      fontSize: '15px'
-                    }
+                  sx={{
+                    "& .MuiListItemText-primary": {
+                      color: "#666666",
+                      fontSize: "15px",
+                    },
                   }}
                 />
               </ListItem>
@@ -385,46 +411,75 @@ export function Navbar() {
         anchorEl={userMenuAnchor}
         open={Boolean(userMenuAnchor)}
         onClose={handleUserMenuClose}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        transformOrigin={{ horizontal: "right", vertical: "top" }}
+        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
         sx={{
-          '& .MuiPaper-root': {
-            backgroundColor: '#ffffff',
-            border: '1px solid #e5e5e5',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            borderRadius: '8px',
-            mt: 0.5
-          }
+          "& .MuiPaper-root": {
+            backgroundColor: "#ffffff",
+            border: "1px solid #e5e5e5",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            borderRadius: "8px",
+            mt: 0.5,
+          },
         }}
       >
         {isAuthenticated ? (
           <>
-            <Box sx={{ p: 2, borderBottom: '1px solid #e5e5e5', minWidth: 200 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#333333' }}>
+            <Box
+              sx={{ p: 2, borderBottom: "1px solid #e5e5e5", minWidth: 200 }}
+            >
+              <Typography
+                variant="subtitle2"
+                sx={{ fontWeight: 600, color: "#333333" }}
+              >
                 {user?.name || "User"}
               </Typography>
-              <Typography variant="body2" sx={{ color: '#666666', fontSize: '13px' }}>
+              <Typography
+                variant="body2"
+                sx={{ color: "#666666", fontSize: "13px" }}
+              >
                 {user?.email}
               </Typography>
             </Box>
-            <MenuItem 
-              onClick={() => { handleUserMenuClose(); handleNavigate('/profile'); }}
-              sx={{ py: 1.5, px: 2, color: '#666666', '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' } }}
+            <MenuItem
+              onClick={() => {
+                handleUserMenuClose();
+                handleNavigate("/profile");
+              }}
+              sx={{
+                py: 1.5,
+                px: 2,
+                color: "#666666",
+                "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.04)" },
+              }}
             >
               <PersonIcon sx={{ mr: 2, fontSize: 20 }} />
               Profile
             </MenuItem>
-            <MenuItem 
-              onClick={() => { handleUserMenuClose(); handleNavigate('/settings'); }}
-              sx={{ py: 1.5, px: 2, color: '#666666', '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' } }}
+            <MenuItem
+              onClick={() => {
+                handleUserMenuClose();
+                handleNavigate("/settings");
+              }}
+              sx={{
+                py: 1.5,
+                px: 2,
+                color: "#666666",
+                "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.04)" },
+              }}
             >
               <SettingsIcon sx={{ mr: 2, fontSize: 20 }} />
               Settings
             </MenuItem>
-            <Divider sx={{ borderColor: '#e5e5e5' }} />
-            <MenuItem 
+            <Divider sx={{ borderColor: "#e5e5e5" }} />
+            <MenuItem
               onClick={handleSignOut}
-              sx={{ py: 1.5, px: 2, color: '#666666', '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' } }}
+              sx={{
+                py: 1.5,
+                px: 2,
+                color: "#666666",
+                "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.04)" },
+              }}
             >
               <LogoutIcon sx={{ mr: 2, fontSize: 20 }} />
               Sign Out
@@ -432,15 +487,31 @@ export function Navbar() {
           </>
         ) : (
           <>
-            <MenuItem 
-              onClick={() => { handleUserMenuClose(); handleNavigate('/auth/login'); }}
-              sx={{ py: 1.5, px: 2, color: '#666666', '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' } }}
+            <MenuItem
+              onClick={() => {
+                handleUserMenuClose();
+                handleNavigate("/auth/login");
+              }}
+              sx={{
+                py: 1.5,
+                px: 2,
+                color: "#666666",
+                "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.04)" },
+              }}
             >
               Sign In
             </MenuItem>
-            <MenuItem 
-              onClick={() => { handleUserMenuClose(); handleNavigate('/auth/sign-up'); }}
-              sx={{ py: 1.5, px: 2, color: '#666666', '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' } }}
+            <MenuItem
+              onClick={() => {
+                handleUserMenuClose();
+                handleNavigate("/auth/sign-up");
+              }}
+              sx={{
+                py: 1.5,
+                px: 2,
+                color: "#666666",
+                "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.04)" },
+              }}
             >
               Sign Up
             </MenuItem>
@@ -454,37 +525,52 @@ export function Navbar() {
         open={Boolean(themeMenuAnchor)}
         onClose={handleThemeMenuClose}
         sx={{
-          '& .MuiPaper-root': {
-            backgroundColor: '#ffffff',
-            border: '1px solid #e5e5e5',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            borderRadius: '8px',
-            mt: 0.5
-          }
+          "& .MuiPaper-root": {
+            backgroundColor: "#ffffff",
+            border: "1px solid #e5e5e5",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            borderRadius: "8px",
+            mt: 0.5,
+          },
         }}
       >
         <MenuItem
           onClick={() => handleThemeChange("light")}
-          sx={{ py: 1.5, px: 2, color: '#666666', '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' } }}
+          sx={{
+            py: 1.5,
+            px: 2,
+            color: "#666666",
+            "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.04)" },
+          }}
         >
           <LightModeIcon sx={{ mr: 2, fontSize: 20 }} />
           Light
         </MenuItem>
         <MenuItem
           onClick={() => handleThemeChange("dark")}
-          sx={{ py: 1.5, px: 2, color: '#666666', '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' } }}
+          sx={{
+            py: 1.5,
+            px: 2,
+            color: "#666666",
+            "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.04)" },
+          }}
         >
           <DarkModeIcon sx={{ mr: 2, fontSize: 20 }} />
           Dark
         </MenuItem>
         <MenuItem
           onClick={() => handleThemeChange("system")}
-          sx={{ py: 1.5, px: 2, color: '#666666', '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' } }}
+          sx={{
+            py: 1.5,
+            px: 2,
+            color: "#666666",
+            "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.04)" },
+          }}
         >
           <ComputerIcon sx={{ mr: 2, fontSize: 20 }} />
           System
         </MenuItem>
       </Menu>
     </>
-  )
+  );
 }

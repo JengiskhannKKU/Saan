@@ -1,43 +1,44 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
+import Image from "next/image";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { createClient } from "@/lib/supabase/client"
-import { Eye, EyeOff } from "lucide-react"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { createClient } from "@/lib/supabase/client";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const supabase = createClient()
-    setIsLoading(true)
-    setError(null)
+    e.preventDefault();
+    const supabase = createClient();
+    setIsLoading(true);
+    setError(null);
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
-      })
-      if (error) throw error
-      router.push("/dashboard")
+      });
+      if (error) throw error;
+      router.push("/dashboard");
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred")
+      setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -45,18 +46,30 @@ export default function LoginPage() {
         <div className="bg-white rounded-2xl p-8 shadow-sm">
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="text-2xl font-bold text-gray-800 mb-2" style={{ fontFamily: "serif" }}>
-              saan
-            </div>
-            <h1 className="text-xl font-semibold text-gray-800 mb-2">Login Your Account</h1>
-            <p className="text-sm text-gray-500">Welcome back! Please enter your details</p>
+            <Image
+              src="/saan_logo.png"
+              alt="Saan Logo"
+              width={200}
+              height={64}
+              priority
+              className="mx-auto"
+            />
+            <h1 className="text-xl font-semibold text-gray-800 mb-2">
+              Login Your Account
+            </h1>
+            <p className="text-sm text-gray-500">
+              Join us today! Please fill in your details
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email Field */}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                Email
+              <Label
+                htmlFor="email"
+                className="text-sm font-medium text-gray-700"
+              >
+                อีเมล
               </Label>
               <Input
                 id="email"
@@ -64,15 +77,18 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="h-12 border-gray-200 rounded-lg focus:border-gray-400 focus:ring-0"
-                placeholder="Enter your email"
+                placeholder="กรอกอีเมลของคุณ"
                 required
               />
             </div>
 
             {/* Password Field */}
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-                Password
+              <Label
+                htmlFor="password"
+                className="text-sm font-medium text-gray-700"
+              >
+                รหัสผ่าน
               </Label>
               <div className="relative">
                 <Input
@@ -81,7 +97,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="h-12 border-gray-200 rounded-lg focus:border-gray-400 focus:ring-0 pr-10"
-                  placeholder="Enter your password"
+                  placeholder="กรอกรหัสผ่านของคุณ"
                   required
                 />
                 <button
@@ -89,7 +105,11 @@ export default function LoginPage() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </div>
@@ -102,17 +122,27 @@ export default function LoginPage() {
                   type="checkbox"
                   className="h-4 w-4 text-gray-600 border-gray-300 rounded focus:ring-0"
                 />
-                <label htmlFor="remember" className="ml-2 text-sm text-gray-600">
+                <label
+                  htmlFor="remember"
+                  className="ml-2 text-sm text-gray-600"
+                >
                   Remember me
                 </label>
               </div>
-              <Link href="/auth/forgot-password" className="text-sm text-gray-600 hover:text-gray-800">
+              <Link
+                href="/auth/forgot-password"
+                className="text-sm text-gray-600 hover:text-gray-800"
+              >
                 Forgot password?
               </Link>
             </div>
 
             {/* Error Message */}
-            {error && <div className="text-sm text-red-600 text-center bg-red-50 p-3 rounded-lg">{error}</div>}
+            {error && (
+              <div className="text-sm text-red-600 text-center bg-red-50 p-3 rounded-lg">
+                {error}
+              </div>
+            )}
 
             {/* Login Button */}
             <Button
@@ -128,7 +158,10 @@ export default function LoginPage() {
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Don't have an account?{" "}
-              <Link href="/auth/sign-up" className="text-gray-800 font-medium hover:underline">
+              <Link
+                href="/auth/sign-up"
+                className="text-gray-800 font-medium hover:underline"
+              >
                 Sign up
               </Link>
             </p>
@@ -136,5 +169,5 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
