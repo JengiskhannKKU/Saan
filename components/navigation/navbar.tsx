@@ -2,8 +2,7 @@
 
 import React from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { motion } from "framer-motion"
+import { usePathname, useRouter } from "next/navigation"
 import {
   AppBar,
   Toolbar,
@@ -20,6 +19,7 @@ import {
   ListItemIcon,
   ListItemText,
   Divider,
+  Box,
   useMediaQuery,
   useTheme,
 } from "@mui/material"
@@ -31,7 +31,8 @@ import {
   Person as PersonIcon,
   Settings as SettingsIcon,
   Logout as LogoutIcon,
-  Notifications as NotificationsIcon,
+  Search as SearchIcon,
+  ShoppingCart as ShoppingCartIcon,
   LightMode as LightModeIcon,
   DarkMode as DarkModeIcon,
   Computer as ComputerIcon,
@@ -47,7 +48,6 @@ import {
 } from "@/lib/redux/selectors"
 import { toggleMobileMenu, setMobileMenuOpen } from "@/lib/redux/slices/ui-slice"
 import { useSupabaseAuth } from "@/lib/supabase/auth"
-import { cn } from "@/lib/utils"
 
 const navigationItems = [
   { name: "Home", href: "/", icon: HomeIcon },
@@ -58,6 +58,7 @@ const navigationItems = [
 
 export function Navbar() {
   const pathname = usePathname()
+  const router = useRouter()
   const muiTheme = useTheme()
   const { theme, setTheme } = useNextTheme()
   const isMobile = useMediaQuery(muiTheme.breakpoints.down("md"))
@@ -73,8 +74,18 @@ export function Navbar() {
 
   const [userMenuAnchor, setUserMenuAnchor] = React.useState<null | HTMLElement>(null)
   const [themeMenuAnchor, setThemeMenuAnchor] = React.useState<null | HTMLElement>(null)
-  const [notificationMenuAnchor, setNotificationMenuAnchor] = React.useState<null | HTMLElement>(null)
 
+  // Navigation handlers
+  const handleNavigate = (href: string) => {
+    router.push(href)
+  }
+
+  const handleMobileNavigate = (href: string) => {
+    dispatch(setMobileMenuOpen(false))
+    setTimeout(() => router.push(href), 100)
+  }
+
+  // Menu handlers
   const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setUserMenuAnchor(event.currentTarget)
   }
@@ -91,17 +102,13 @@ export function Navbar() {
     setThemeMenuAnchor(null)
   }
 
-  const handleNotificationMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setNotificationMenuAnchor(event.currentTarget)
-  }
-
-  const handleNotificationMenuClose = () => {
-    setNotificationMenuAnchor(null)
-  }
-
   const handleSignOut = async () => {
-    await signOut()
-    handleUserMenuClose()
+    try {
+      await signOut()
+      handleUserMenuClose()
+    } catch (error) {
+      console.error('Sign out error:', error)
+    }
   }
 
   const handleMobileMenuToggle = () => {
@@ -112,138 +119,127 @@ export function Navbar() {
     dispatch(setMobileMenuOpen(false))
   }
 
+  const handleThemeChange = (newTheme: string) => {
+    setTheme(newTheme)
+    handleThemeMenuClose()
+  }
+
   const themeIcon = theme === "dark" ? <DarkModeIcon /> : theme === "light" ? <LightModeIcon /> : <ComputerIcon />
 
   return (
     <>
       <AppBar
         position="sticky"
-        className="bg-background/80 backdrop-blur-md border-b border-border shadow-sm"
         elevation={0}
+        sx={{
+          backgroundColor: '#ffffff',
+          borderBottom: '1px solid #e5e5e5',
+          boxShadow: 'none',
+        }}
       >
-        <Toolbar className="px-4 lg:px-6">
-          {/* Mobile menu button */}
-          {isMobile && (
-            <IconButton
-              edge="start"
-              color="inherit"
-              aria-label="menu"
-              onClick={handleMobileMenuToggle}
-              className="mr-2 text-foreground hover:bg-accent"
-            >
-              <MenuIcon />
-            </IconButton>
-          )}
-
-          {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3 }}
-            className="flex items-center"
+        <Toolbar 
+          sx={{ 
+            minHeight: '60px !important',
+            px: { xs: 2, sm: 3 },
+            justifyContent: 'space-between'
+          }}
+        >
+          {/* Left side - Menu button */}
+          <IconButton
+            edge="start"
+            aria-label="menu"
+            onClick={handleMobileMenuToggle}
+            sx={{ 
+              color: '#333333',
+              p: 1,
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.04)'
+              }
+            }}
           >
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <Typography variant="h6" className="text-primary-foreground font-bold">
-                  {"A"}
-                </Typography>
-              </div>
-              <Typography variant="h6" className="text-foreground font-semibold hidden sm:block">
-                {"App"}
-              </Typography>
-            </Link>
-          </motion.div>
+            <MenuIcon sx={{ fontSize: 24 }} />
+          </IconButton>
 
-          {/* Desktop Navigation */}
-          {!isMobile && (
-            <motion.nav
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.1 }}
-              className="flex items-center space-x-1 ml-8"
-            >
-              {navigationItems.map((item) => {
-                const isActive = pathname === item.href
-                return (
-                  <Link key={item.name} href={item.href}>
-                    <Button
-                      className={cn(
-                        "text-muted-foreground hover:text-foreground hover:bg-accent transition-colors relative",
-                        isActive && "text-foreground bg-accent",
-                      )}
-                      startIcon={<item.icon />}
-                    >
-                      {item.name}
-                      {isActive && (
-                        <motion.div
-                          layoutId="navbar-indicator"
-                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
-                          initial={false}
-                          transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                        />
-                      )}
-                    </Button>
-                  </Link>
-                )
-              })}
-            </motion.nav>
-          )}
-
-          <div className="flex-1" />
-
-          {/* Right side actions */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, delay: 0.2 }}
-            className="flex items-center space-x-2"
+          {/* Center - Brand name */}
+          <Box 
+            sx={{ 
+              position: 'absolute',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              cursor: 'pointer'
+            }}
+            onClick={() => handleNavigate('/')}
           >
-            {/* Theme toggle */}
+            <div className="text-2xl font-bold text-gray-800" style={{ fontFamily: "serif" }}>
+              saan
+            </div>
+          </Box>
+
+          {/* Right side - Icons */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            {/* Search Icon */}
             <IconButton
-              onClick={handleThemeMenuOpen}
-              className="text-muted-foreground hover:text-foreground hover:bg-accent"
+              sx={{ 
+                color: '#333333',
+                p: 1,
+                '&:hover': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                }
+              }}
             >
-              {themeIcon}
+              <SearchIcon sx={{ fontSize: 20 }} />
             </IconButton>
 
+            {/* Shopping Cart Icon */}
+            <IconButton
+              sx={{ 
+                color: '#333333',
+                p: 1,
+                '&:hover': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                }
+              }}
+            >
+              <ShoppingCartIcon sx={{ fontSize: 20 }} />
+            </IconButton>
+
+            {/* User Avatar */}
             {isAuthenticated ? (
-              <>
-                {/* Notifications */}
-                <IconButton
-                  onClick={handleNotificationMenuOpen}
-                  className="text-muted-foreground hover:text-foreground hover:bg-accent"
+              <IconButton 
+                onClick={handleUserMenuOpen}
+                sx={{ 
+                  p: 0.5,
+                  ml: 0.5
+                }}
+              >
+                <Avatar
+                  src={user?.avatar_url}
+                  sx={{ 
+                    width: 28, 
+                    height: 28, 
+                    bgcolor: '#333333',
+                    fontSize: '14px'
+                  }}
                 >
-                  <Badge badgeContent={unreadNotifications.length} color="error">
-                    <NotificationsIcon />
-                  </Badge>
-                </IconButton>
-
-                {/* User menu */}
-                <IconButton onClick={handleUserMenuOpen} className="ml-2">
-                  <Avatar
-                    src={user?.avatar_url}
-                    alt={user?.name || user?.email}
-                    className="w-8 h-8 bg-primary text-primary-foreground"
-                  >
-                    {user?.name?.[0] || user?.email?.[0] || "U"}
-                  </Avatar>
-                </IconButton>
-              </>
+                  {user?.name?.[0] || user?.email?.[0] || "U"}
+                </Avatar>
+              </IconButton>
             ) : (
-              <div className="flex items-center space-x-2">
-                <Link href="/auth/login">
-                  <Button variant="outlined" size="small" className="border-border text-foreground hover:bg-accent">
-                    {"Sign In"}
-                  </Button>
-                </Link>
-                <Link href="/auth/sign-up">
-                  <Button variant="contained" size="small" className="bg-primary text-primary-foreground">
-                    {"Sign Up"}
-                  </Button>
-                </Link>
-              </div>
+              <IconButton
+                onClick={handleUserMenuOpen}
+                sx={{ 
+                  color: '#333333',
+                  p: 1,
+                  ml: 0.5,
+                  '&:hover': {
+                    backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                  }
+                }}
+              >
+                <PersonIcon sx={{ fontSize: 20 }} />
+              </IconButton>
             )}
-          </motion.div>
+          </Box>
         </Toolbar>
       </AppBar>
 
@@ -252,57 +248,136 @@ export function Navbar() {
         anchor="left"
         open={mobileMenuOpen}
         onClose={handleMobileMenuClose}
-        className="md:hidden"
-        PaperProps={{
-          className: "w-64 bg-background border-r border-border",
+        sx={{ 
+          '& .MuiDrawer-paper': {
+            width: 280,
+            backgroundColor: '#ffffff',
+            boxShadow: '2px 0 8px rgba(0,0,0,0.1)'
+          }
         }}
       >
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <Typography variant="h6" className="text-foreground font-semibold">
-            {"Menu"}
+        {/* Header */}
+        <Box sx={{ 
+          p: 2, 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          borderBottom: '1px solid #e5e5e5'
+        }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, color: '#333333' }}>
+            Menu
           </Typography>
-          <IconButton onClick={handleMobileMenuClose} className="text-muted-foreground">
+          <IconButton 
+            onClick={handleMobileMenuClose} 
+            size="small"
+            sx={{ color: '#666666' }}
+          >
             <CloseIcon />
           </IconButton>
-        </div>
-
-        <List className="flex-1">
+        </Box>
+        
+        {/* Navigation Items */}
+        <List sx={{ pt: 1 }}>
           {navigationItems.map((item) => {
             const isActive = pathname === item.href
+            const IconComponent = item.icon
             return (
-              <Link key={item.name} href={item.href} onClick={handleMobileMenuClose}>
-                <ListItem
-                  className={cn(
-                    "hover:bg-accent transition-colors",
-                    isActive && "bg-accent text-foreground border-r-2 border-primary",
-                  )}
-                >
-                  <ListItemIcon className={cn("text-muted-foreground", isActive && "text-primary")}>
-                    <item.icon />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={item.name}
-                    className={cn("text-muted-foreground", isActive && "text-foreground")}
-                  />
-                </ListItem>
-              </Link>
+              <ListItem 
+                key={item.name}
+                onClick={() => handleMobileNavigate(item.href)}
+                sx={{
+                  cursor: 'pointer',
+                  py: 1.5,
+                  px: 2,
+                  backgroundColor: isActive ? 'rgba(0, 0, 0, 0.04)' : 'transparent',
+                  borderLeft: isActive ? '3px solid #333333' : '3px solid transparent',
+                  '&:hover': {
+                    backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                  }
+                }}
+              >
+                <ListItemIcon sx={{ 
+                  color: isActive ? '#333333' : '#666666',
+                  minWidth: 40
+                }}>
+                  <IconComponent sx={{ fontSize: 22 }} />
+                </ListItemIcon>
+                <ListItemText 
+                  primary={item.name}
+                  sx={{ 
+                    '& .MuiListItemText-primary': {
+                      color: isActive ? '#333333' : '#666666',
+                      fontWeight: isActive ? 600 : 400,
+                      fontSize: '15px'
+                    }
+                  }}
+                />
+              </ListItem>
             )
           })}
         </List>
 
-        {isAuthenticated && (
-          <>
-            <Divider className="border-border" />
+        {/* Bottom section */}
+        <Box sx={{ mt: 'auto' }}>
+          <Divider sx={{ borderColor: '#e5e5e5' }} />
+          
+          {/* Theme Toggle */}
+          <List>
+            <ListItem 
+              onClick={handleThemeMenuOpen}
+              sx={{
+                cursor: 'pointer',
+                py: 1.5,
+                px: 2,
+                '&:hover': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                }
+              }}
+            >
+              <ListItemIcon sx={{ color: '#666666', minWidth: 40 }}>
+                {themeIcon}
+              </ListItemIcon>
+              <ListItemText 
+                primary="Theme"
+                sx={{ 
+                  '& .MuiListItemText-primary': {
+                    color: '#666666',
+                    fontSize: '15px'
+                  }
+                }}
+              />
+            </ListItem>
+          </List>
+
+          {isAuthenticated && (
             <List>
-              <ListItem onClick={handleSignOut} className="hover:bg-accent transition-colors cursor-pointer">
-                <ListItemIcon className="text-muted-foreground">
-                  <LogoutIcon />
+              <ListItem 
+                onClick={handleSignOut}
+                sx={{
+                  cursor: 'pointer',
+                  py: 1.5,
+                  px: 2,
+                  '&:hover': {
+                    backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                  }
+                }}
+              >
+                <ListItemIcon sx={{ color: '#666666', minWidth: 40 }}>
+                  <LogoutIcon sx={{ fontSize: 22 }} />
                 </ListItemIcon>
-                <ListItemText primary="Sign Out" className="text-muted-foreground" />
+                <ListItemText 
+                  primary="Sign Out"
+                  sx={{ 
+                    '& .MuiListItemText-primary': {
+                      color: '#666666',
+                      fontSize: '15px'
+                    }
+                  }}
+                />
               </ListItem>
             </List>
-          </>
-        )}
+          )}
+        </Box>
       </Drawer>
 
       {/* User Menu */}
@@ -310,31 +385,67 @@ export function Navbar() {
         anchorEl={userMenuAnchor}
         open={Boolean(userMenuAnchor)}
         onClose={handleUserMenuClose}
-        PaperProps={{
-          className: "bg-background border border-border shadow-lg",
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        sx={{
+          '& .MuiPaper-root': {
+            backgroundColor: '#ffffff',
+            border: '1px solid #e5e5e5',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            borderRadius: '8px',
+            mt: 0.5
+          }
         }}
       >
-        <div className="px-4 py-2 border-b border-border">
-          <Typography variant="subtitle2" className="text-foreground font-medium">
-            {user?.name || "User"}
-          </Typography>
-          <Typography variant="body2" className="text-muted-foreground">
-            {user?.email}
-          </Typography>
-        </div>
-        <MenuItem onClick={handleUserMenuClose} className="text-muted-foreground hover:bg-accent">
-          <PersonIcon className="mr-2" />
-          {"Profile"}
-        </MenuItem>
-        <MenuItem onClick={handleUserMenuClose} className="text-muted-foreground hover:bg-accent">
-          <SettingsIcon className="mr-2" />
-          {"Settings"}
-        </MenuItem>
-        <Divider className="border-border" />
-        <MenuItem onClick={handleSignOut} className="text-muted-foreground hover:bg-accent">
-          <LogoutIcon className="mr-2" />
-          {"Sign Out"}
-        </MenuItem>
+        {isAuthenticated ? (
+          <>
+            <Box sx={{ p: 2, borderBottom: '1px solid #e5e5e5', minWidth: 200 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#333333' }}>
+                {user?.name || "User"}
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#666666', fontSize: '13px' }}>
+                {user?.email}
+              </Typography>
+            </Box>
+            <MenuItem 
+              onClick={() => { handleUserMenuClose(); handleNavigate('/profile'); }}
+              sx={{ py: 1.5, px: 2, color: '#666666', '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' } }}
+            >
+              <PersonIcon sx={{ mr: 2, fontSize: 20 }} />
+              Profile
+            </MenuItem>
+            <MenuItem 
+              onClick={() => { handleUserMenuClose(); handleNavigate('/settings'); }}
+              sx={{ py: 1.5, px: 2, color: '#666666', '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' } }}
+            >
+              <SettingsIcon sx={{ mr: 2, fontSize: 20 }} />
+              Settings
+            </MenuItem>
+            <Divider sx={{ borderColor: '#e5e5e5' }} />
+            <MenuItem 
+              onClick={handleSignOut}
+              sx={{ py: 1.5, px: 2, color: '#666666', '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' } }}
+            >
+              <LogoutIcon sx={{ mr: 2, fontSize: 20 }} />
+              Sign Out
+            </MenuItem>
+          </>
+        ) : (
+          <>
+            <MenuItem 
+              onClick={() => { handleUserMenuClose(); handleNavigate('/auth/login'); }}
+              sx={{ py: 1.5, px: 2, color: '#666666', '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' } }}
+            >
+              Sign In
+            </MenuItem>
+            <MenuItem 
+              onClick={() => { handleUserMenuClose(); handleNavigate('/auth/sign-up'); }}
+              sx={{ py: 1.5, px: 2, color: '#666666', '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' } }}
+            >
+              Sign Up
+            </MenuItem>
+          </>
+        )}
       </Menu>
 
       {/* Theme Menu */}
@@ -342,74 +453,37 @@ export function Navbar() {
         anchorEl={themeMenuAnchor}
         open={Boolean(themeMenuAnchor)}
         onClose={handleThemeMenuClose}
-        PaperProps={{
-          className: "bg-background border border-border shadow-lg",
+        sx={{
+          '& .MuiPaper-root': {
+            backgroundColor: '#ffffff',
+            border: '1px solid #e5e5e5',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            borderRadius: '8px',
+            mt: 0.5
+          }
         }}
       >
         <MenuItem
-          onClick={() => {
-            setTheme("light")
-            handleThemeMenuClose()
-          }}
-          className="text-muted-foreground hover:bg-accent"
+          onClick={() => handleThemeChange("light")}
+          sx={{ py: 1.5, px: 2, color: '#666666', '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' } }}
         >
-          <LightModeIcon className="mr-2" />
-          {"Light"}
+          <LightModeIcon sx={{ mr: 2, fontSize: 20 }} />
+          Light
         </MenuItem>
         <MenuItem
-          onClick={() => {
-            setTheme("dark")
-            handleThemeMenuClose()
-          }}
-          className="text-muted-foreground hover:bg-accent"
+          onClick={() => handleThemeChange("dark")}
+          sx={{ py: 1.5, px: 2, color: '#666666', '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' } }}
         >
-          <DarkModeIcon className="mr-2" />
-          {"Dark"}
+          <DarkModeIcon sx={{ mr: 2, fontSize: 20 }} />
+          Dark
         </MenuItem>
         <MenuItem
-          onClick={() => {
-            setTheme("system")
-            handleThemeMenuClose()
-          }}
-          className="text-muted-foreground hover:bg-accent"
+          onClick={() => handleThemeChange("system")}
+          sx={{ py: 1.5, px: 2, color: '#666666', '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' } }}
         >
-          <ComputerIcon className="mr-2" />
-          {"System"}
+          <ComputerIcon sx={{ mr: 2, fontSize: 20 }} />
+          System
         </MenuItem>
-      </Menu>
-
-      {/* Notifications Menu */}
-      <Menu
-        anchorEl={notificationMenuAnchor}
-        open={Boolean(notificationMenuAnchor)}
-        onClose={handleNotificationMenuClose}
-        PaperProps={{
-          className: "bg-background border border-border shadow-lg w-80",
-        }}
-      >
-        <div className="px-4 py-2 border-b border-border">
-          <Typography variant="subtitle2" className="text-foreground font-medium">
-            {"Notifications"}
-          </Typography>
-        </div>
-        {notifications.length > 0 ? (
-          notifications.slice(0, 5).map((notification) => (
-            <MenuItem key={notification.id} className="text-muted-foreground hover:bg-accent whitespace-normal">
-              <div className="flex flex-col">
-                <Typography variant="body2" className="text-foreground">
-                  {notification.message}
-                </Typography>
-                <Typography variant="caption" className="text-muted-foreground">
-                  {new Date(notification.timestamp).toLocaleTimeString()}
-                </Typography>
-              </div>
-            </MenuItem>
-          ))
-        ) : (
-          <MenuItem className="text-muted-foreground">
-            <Typography variant="body2">{"No notifications"}</Typography>
-          </MenuItem>
-        )}
       </Menu>
     </>
   )

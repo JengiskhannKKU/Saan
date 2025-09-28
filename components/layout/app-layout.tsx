@@ -30,7 +30,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         {children}
       </motion.main>
 
-      <MobileNav />
+      {/* <MobileNav /> */}
     </div>
   )
 }

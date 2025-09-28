@@ -141,42 +141,6 @@ export default function HomePage() {
   return (
     <AppLayout>
       <div className="min-h-screen bg-gray-50">
-      {/* Header
-      <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" className="lg:hidden">
-              <Menu className="h-5 w-5" />
-            </Button>
-            <div className="text-2xl font-bold text-gray-800" style={{ fontFamily: "serif" }}>
-              saan
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm">
-              <Search className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <ShoppingCart className="h-5 w-5" />
-            </Button>
-            {user ? (
-              <Link href="/dashboard">
-                <Button variant="ghost" size="sm">
-                  <User className="h-5 w-5" />
-                </Button>
-              </Link>
-            ) : (
-              <Link href="/auth/login">
-                <Button variant="ghost" size="sm">
-                  <User className="h-5 w-5" />
-                </Button>
-              </Link>
-            )}
-          </div>
-        </div>
-      </header> */}
-
       {/* Hero Banner */}
       <div className="px-4 py-6">
         <div className="bg-gradient-to-r from-green-400 to-green-500 rounded-2xl p-6 text-white relative overflow-hidden">
@@ -412,7 +376,7 @@ export default function HomePage() {
       </div>
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
+      {/* <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
         <div className="flex items-center justify-around">
           <Button variant="ghost" size="sm" className="flex flex-col items-center gap-1">
             <div className="w-6 h-6 bg-gray-800 rounded"></div>
@@ -442,7 +406,7 @@ export default function HomePage() {
             </Link>
           )}
         </div>
-      </div>
+      </div> */}
     </div>
     </AppLayout>
   )
