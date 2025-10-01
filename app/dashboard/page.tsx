@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { User, ShoppingBag, Heart, Settings, LogOut } from "lucide-react";
 import Link from "next/link";
 import { AppLayout } from "@/components/layout/app-layout";
+import { getUserWithRole } from "@/lib/supabase/utils";
 
 export default async function DashboardPage() {
   const supabase = await createClient();

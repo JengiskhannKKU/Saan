@@ -60,7 +60,7 @@ const navigationItems = [
   { name: "Dashboard", href: "/dashboard", icon: DashboardIcon },
   { name: "Profile", href: "/profile", icon: PersonIcon },
   { name: "Settings", href: "/settings", icon: SettingsIcon },
-  { name: "สมัครเป็นจิตอาสา/โบร์คเกอร์", href: "/settings", icon: Help },
+  { name: "สมัครเป็นจิตอาสา/โบร์คเกอร์", href: "/roleAuth", icon: Help },
 ];
 
 export function Navbar() {
