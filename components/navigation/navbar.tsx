@@ -36,6 +36,7 @@ import {
   LightMode as LightModeIcon,
   DarkMode as DarkModeIcon,
   Computer as ComputerIcon,
+  Help,
 } from "@mui/icons-material";
 import { useTheme as useNextTheme } from "next-themes";
 import { useAppSelector, useAppDispatch } from "@/lib/redux/hooks";
@@ -59,6 +60,7 @@ const navigationItems = [
   { name: "Dashboard", href: "/dashboard", icon: DashboardIcon },
   { name: "Profile", href: "/profile", icon: PersonIcon },
   { name: "Settings", href: "/settings", icon: SettingsIcon },
+  { name: "สมัครเป็นจิตอาสา/โบร์คเกอร์", href: "/settings", icon: Help },
 ];
 
 export function Navbar() {
@@ -284,9 +286,13 @@ export function Navbar() {
             borderBottom: "1px solid #e5e5e5",
           }}
         >
-          <Typography variant="h6" sx={{ fontWeight: 600, color: "#333333" }}>
-            Menu
-          </Typography>
+          <Image
+              src="/saan_logo.png"
+              alt="Saan Logo"
+              width={100}
+              height={32}
+              priority
+            />
           <IconButton
             onClick={handleMobileMenuClose}
             size="small"
