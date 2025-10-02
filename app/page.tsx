@@ -17,6 +17,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { AppLayout } from "@/components/layout/app-layout";
+import ProductCardLink from "@/components/ProductCard";
 
 const categories = [
   { id: "pottery", name: "เครื่องปั้นดินเผา", active: true },
@@ -225,11 +226,10 @@ export default function HomePage() {
                 key={category.id}
                 variant={category.active ? "default" : "outline"}
                 size="sm"
-                className={`whitespace-nowrap ${
-                  category.active
+                className={`whitespace-nowrap ${category.active
                     ? "bg-gray-800 text-white"
                     : "bg-white text-gray-600 border-gray-200"
-                }`}
+                  }`}
                 onClick={() => setActiveCategory(category.id)}
               >
                 {category.name}
@@ -295,11 +295,10 @@ export default function HomePage() {
                           {[...Array(5)].map((_, i) => (
                             <span
                               key={i}
-                              className={`text-sm ${
-                                i < Math.floor(getProductAtOffset(0).rating)
+                              className={`text-sm ${i < Math.floor(getProductAtOffset(0).rating)
                                   ? "text-yellow-400"
                                   : "text-gray-300"
-                              }`}
+                                }`}
                             >
                               ★
                             </span>
@@ -380,11 +379,10 @@ export default function HomePage() {
                 {featuredProducts.map((_, index) => (
                   <button
                     key={index}
-                    className={`w-3 h-3 rounded-full transition-all duration-300 hover:scale-125 ${
-                      index === currentSlide
+                    className={`w-3 h-3 rounded-full transition-all duration-300 hover:scale-125 ${index === currentSlide
                         ? "bg-green-500 scale-110"
                         : "bg-gray-300 hover:bg-gray-400"
-                    }`}
+                      }`}
                     onClick={() => {
                       if (!isTransitioning) {
                         setIsTransitioning(true);
@@ -409,43 +407,7 @@ export default function HomePage() {
 
           <div className="grid grid-cols-2 gap-4">
             {dbProducts.map((product) => (
-              <Card
-                key={product.id}
-                className="bg-white shadow-sm hover:shadow-md transition-shadow"
-              >
-                <CardContent className="p-3">
-                  <div className="aspect-square bg-gray-100 rounded-lg mb-3 overflow-hidden">
-                    <img
-                      src={product.image_url || "/placeholder.svg"}
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-
-                  {/* ✅ Elder info */}
-                  {product.elders && (
-                    <div className="flex items-center mb-2">
-                      <img
-                        src={product.elders.avatar_url || "/placeholder.svg"}
-                        alt={product.elders.first_name}
-                        className="w-6 h-6 rounded-full mr-2"
-                      />
-                      <span className="text-sm text-gray-600">
-                        {product.elders.first_name} {product.elders.last_name}
-                      </span>
-                    </div>
-                  )}
-
-                  <h3 className="font-medium text-gray-800 text-sm mb-1 line-clamp-2">
-                    {product.name}
-                  </h3>
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-green-600">
-                      {product.price ? `฿${product.price}` : "—"}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
+              <ProductCardLink key={product.id} product={product} />
             ))}
 
             {/* still show sample products if db empty */}
