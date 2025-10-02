@@ -6,21 +6,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
-import { useAppDispatch } from "@/lib/redux/hooks";
-import { setUser } from "@/lib/redux/slices/auth-slice";
 import { AppLayout } from "@/components/layout/app-layout";
 
-export default function BrokerRegisterPage() {
-  const [fullName, setFullName] = useState("");
+export default function AddElderPage() {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [age, setAge] = useState("");
   const [phone, setPhone] = useState("");
   const [province, setProvince] = useState("");
   const [district, setDistrict] = useState("");
   const [subdistrict, setSubdistrict] = useState("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
-  const dispatch = useAppDispatch();
   const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,32 +35,46 @@ export default function BrokerRegisterPage() {
       } = await supabase.auth.getUser();
       if (userError || !user) throw userError || new Error("Not authenticated");
 
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({
-          role: "broker",
-          full_name: fullName,
-          phone,
-          province,
-          district,
-          subdistrict,
-        })
-        .eq("id", user.id);
+      let avatar_url: string | null = null;
 
-      if (updateError) throw updateError;
+      // ---- Upload avatar if file selected ----
+      if (avatarFile) {
+        const fileExt = avatarFile.name.split(".").pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from("elder-avatars")
+          .upload(fileName, avatarFile, {
+            cacheControl: "3600",
+            upsert: false,
+          });
 
-      dispatch(
-        setUser({
-          id: user.id,
-          email: user.email!,
-          name: fullName,
-          role: "broker",
-        })
-      );
+        if (uploadError) throw uploadError;
 
-      router.push("/broker/home");
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("elder-avatars").getPublicUrl(fileName);
+
+        avatar_url = publicUrl;
+      }
+
+      // ---- Insert elder record ----
+      // inside handleSubmit in app/volunteer/add-elder/page.tsx
+      const { error: insertError } = await supabase.from("elders").insert({
+        first_name: firstName,
+        last_name: lastName,
+        age: age ? Number(age) : null,
+        phone,
+        province,
+        district,
+        subdistrict,
+        avatar_url,
+      });
+
+      if (insertError) throw insertError;
+
+      router.push("/volunteer");
     } catch (err: any) {
-      setError(err.message || "เกิดข้อผิดพลาด");
+      setError(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -72,65 +86,84 @@ export default function BrokerRegisterPage() {
         <div className="w-full max-w-md">
           <div className="bg-white rounded-2xl p-8 shadow-sm">
             <h1 className="text-xl font-semibold text-gray-800 mb-2">
-              สมัครเป็นโบรกเกอร์
+              เพิ่มผู้สูงอายุ
             </h1>
-            <p className="text-sm text-gray-500 mb-6">
-              กรอกข้อมูลของคุณเพื่อเข้าร่วมเป็นโบรกเกอร์
-            </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Avatar upload */}
               <div className="space-y-2">
-                <Label htmlFor="fullName">ชื่อ-นามสกุล</Label>
+                <Label htmlFor="avatar">อัปโหลดรูปภาพ</Label>
                 <Input
-                  id="fullName"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
+                  id="avatar"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) =>
+                    setAvatarFile(e.target.files ? e.target.files[0] : null)
+                  }
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="firstName">ชื่อ</Label>
+                <Input
+                  id="firstName"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">นามสกุล</Label>
+                <Input
+                  id="lastName"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="age">อายุ</Label>
+                <Input
+                  id="age"
+                  type="number"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">เบอร์โทร</Label>
                 <Input
                   id="phone"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  required
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="province">จังหวัด</Label>
                 <Input
                   id="province"
                   value={province}
                   onChange={(e) => setProvince(e.target.value)}
-                  required
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="district">อำเภอ</Label>
                 <Input
                   id="district"
                   value={district}
                   onChange={(e) => setDistrict(e.target.value)}
-                  required
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="subdistrict">ตำบล</Label>
                 <Input
                   id="subdistrict"
                   value={subdistrict}
                   onChange={(e) => setSubdistrict(e.target.value)}
-                  required
                 />
               </div>
 
               {error && (
-                <div className="text-sm text-red-600 text-center bg-red-50 p-3 rounded-lg">
+                <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
                   {error}
                 </div>
               )}
@@ -140,7 +173,7 @@ export default function BrokerRegisterPage() {
                 disabled={isLoading}
                 className="w-full h-12 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium"
               >
-                {isLoading ? "กำลังบันทึก..." : "ยืนยัน"}
+                {isLoading ? "กำลังบันทึก..." : "เพิ่มผู้สูงอายุ"}
               </Button>
             </form>
           </div>
