@@ -154,7 +154,7 @@ export function Navbar() {
     // Only show roleAuth menu if user has no role
     if (!role) {
       items.push({
-        name: "สมัครเป็นจิตอาสา/โบรคเกอร์",
+        name: "สมัครเป็นจิตอาสา/ตัวแทนจำหน่าย",
         href: "/roleAuth",
         icon: Help,
       });
