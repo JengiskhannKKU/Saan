@@ -54,7 +54,7 @@ export default function AddProductPage() {
       const { error: insertError } = await supabase.from("products").insert({
         elder_id: elderId,
         volunteer_id: user.id,
-        owner_role: "volunteer",
+        owner_role: "broker",
         name,
         description,
         price: price ? Number(price) : null,

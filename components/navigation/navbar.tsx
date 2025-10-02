@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -53,12 +53,13 @@ import {
 } from "@/lib/redux/slices/ui-slice";
 import { useSupabaseAuth } from "@/lib/supabase/auth";
 
-import Image from "next/image"
+import Image from "next/image";
+import { createClient } from "@/lib/supabase/client";
 
 const navigationItems = [
   { name: "Home", href: "/", icon: HomeIcon },
-  { name: "Dashboard", href: "/dashboard", icon: DashboardIcon },
-  { name: "Profile", href: "/profile", icon: PersonIcon },
+  { name: "ตะกร้า", href: "/dashboard", icon: DashboardIcon },
+  { name: "โปรไฟล์", href: "/profile", icon: PersonIcon },
   { name: "Settings", href: "/settings", icon: SettingsIcon },
   { name: "สมัครเป็นจิตอาสา/โบร์คเกอร์", href: "/roleAuth", icon: Help },
 ];
@@ -78,6 +79,7 @@ export function Navbar() {
   const unreadNotifications = useAppSelector(selectUnreadNotifications);
 
   const { signOut } = useSupabaseAuth();
+  const [role, setRole] = useState<string | null>(null);
 
   const [userMenuAnchor, setUserMenuAnchor] =
     React.useState<null | HTMLElement>(null);
@@ -141,6 +143,28 @@ export function Navbar() {
     ) : (
       <ComputerIcon />
     );
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    async function loadRole() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+
+        if (!error && data) setRole(data.role);
+      }
+    }
+
+    loadRole();
+  }, []);
 
   return (
     <>
@@ -287,12 +311,12 @@ export function Navbar() {
           }}
         >
           <Image
-              src="/saan_logo.png"
-              alt="Saan Logo"
-              width={100}
-              height={32}
-              priority
-            />
+            src="/saan_logo.png"
+            alt="Saan Logo"
+            width={100}
+            height={32}
+            priority
+          />
           <IconButton
             onClick={handleMobileMenuClose}
             size="small"
@@ -347,6 +371,55 @@ export function Navbar() {
               </ListItem>
             );
           })}
+
+          {/* ✅ Extra menu item for Volunteer/Broker manage */}
+          {isAuthenticated && (role === "broker" || role === "volunteer") && (
+            <ListItem
+              onClick={() =>
+                handleMobileNavigate(
+                  role === "broker" ? "/broker" : "/volunteer"
+                )
+              }
+              sx={{
+                cursor: "pointer",
+                py: 1.5,
+                px: 2,
+                backgroundColor:
+                  pathname === (role === "broker" ? "/broker" : "/volunteer")
+                    ? "rgba(0, 0, 0, 0.04)"
+                    : "transparent",
+                borderLeft:
+                  pathname === (role === "broker" ? "/broker" : "/volunteer")
+                    ? "3px solid #333333"
+                    : "3px solid transparent",
+                "&:hover": {
+                  backgroundColor: "rgba(0, 0, 0, 0.04)",
+                },
+              }}
+            >
+              <ListItemIcon
+                sx={{
+                  color: "#666666",
+                  minWidth: 40,
+                }}
+              >
+                <DashboardIcon sx={{ fontSize: 22 }} />
+              </ListItemIcon>
+              <ListItemText
+                primary={
+                  role === "broker"
+                    ? "จัดการสินค้า (Broker)"
+                    : "จัดการสินค้า (Volunteer)"
+                }
+                sx={{
+                  "& .MuiListItemText-primary": {
+                    color: "#666666",
+                    fontSize: "15px",
+                  },
+                }}
+              />
+            </ListItem>
+          )}
         </List>
 
         {/* Bottom section */}

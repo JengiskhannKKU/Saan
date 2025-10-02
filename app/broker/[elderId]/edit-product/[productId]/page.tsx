@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,84 +8,90 @@ import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { AppLayout } from "@/components/layout/app-layout";
 
-export default function AddProductPage() {
+export default function EditProductPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const router = useRouter();
   const params = useParams();
   const elderId = params?.elderId as string;
+  const productId = params?.productId as string;
   const supabase = createClient();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    const loadProduct = async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("id", productId)
+        .single();
+      if (error) setError(error.message);
+      if (data) {
+        setName(data.name);
+        setDescription(data.description || "");
+        setPrice(data.price || "");
+      }
+    };
+    loadProduct();
+  }, [productId, supabase]);
+
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setLoading(true);
     setError(null);
 
     try {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-      if (userError || !user) throw userError || new Error("Not authenticated");
-
-      let image_url: string | null = null;
+      let image_url: string | undefined;
 
       if (imageFile) {
         const ext = imageFile.name.split(".").pop();
-        const fileName = `${user.id}/${Date.now()}.${ext}`;
+        const fileName = `${productId}-${Date.now()}.${ext}`;
         const { error: uploadError } = await supabase.storage
-          .from("elder-avatars") // ✅ reuse the same bucket or create `product-images`
-          .upload(fileName, imageFile);
-
+          .from("elder-avatars") // or create 'product-images' bucket
+          .upload(fileName, imageFile, { upsert: true });
         if (uploadError) throw uploadError;
 
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from("elder-avatars").getPublicUrl(fileName);
-
-        image_url = publicUrl;
+        const { data } = supabase.storage.from("elder-avatars").getPublicUrl(fileName);
+        image_url = data.publicUrl;
       }
 
-      const { error: insertError } = await supabase.from("products").insert({
-        elder_id: elderId,
-        volunteer_id: user.id,
-        owner_role: "volunteer",
-        name,
-        description,
-        price: price ? Number(price) : null,
-        image_url,
-      });
+      const { error: updateError } = await supabase
+        .from("products")
+        .update({
+          name,
+          description,
+          price: price ? Number(price) : null,
+          ...(image_url ? { image_url } : {}),
+        })
+        .eq("id", productId);
 
-      if (insertError) throw insertError;
+      if (updateError) throw updateError;
 
       router.push(`/volunteer/${elderId}`);
     } catch (err: any) {
       setError(err.message);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
     <AppLayout>
       <div className="max-w-md mx-auto p-6">
-        <h1 className="text-xl font-semibold mb-4">เพิ่มสินค้า</h1>
+        <h1 className="text-xl font-semibold mb-4">แก้ไขสินค้า</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleUpdate} className="space-y-4">
           <div>
-            <Label htmlFor="image">อัปโหลดรูปภาพสินค้า</Label>
+            <Label htmlFor="image">เปลี่ยนรูปภาพ (ถ้าต้องการ)</Label>
             <Input
               id="image"
               type="file"
               accept="image/*"
-              onChange={(e) =>
-                setImageFile(e.target.files ? e.target.files[0] : null)
-              }
+              onChange={(e) => setImageFile(e.target.files ? e.target.files[0] : null)}
             />
           </div>
 
@@ -116,8 +122,8 @@ export default function AddProductPage() {
             </div>
           )}
 
-          <Button type="submit" disabled={isLoading} className="w-full bg-green-600 hover:bg-green-700">
-            {isLoading ? "กำลังบันทึก..." : "เพิ่มสินค้า"}
+          <Button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700">
+            {loading ? "กำลังบันทึก..." : "บันทึกการแก้ไข"}
           </Button>
         </form>
       </div>

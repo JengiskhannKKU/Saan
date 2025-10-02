@@ -137,21 +137,31 @@ export default function HomePage() {
   useEffect(() => {
     const supabase = createClient();
 
-    // Get initial user
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
-    });
-
-    // Listen for auth changes
+    // keep auth listener
+    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange((_, session) => {
       setUser(session?.user ?? null);
     });
 
+    // 🔹 Fetch products with elder info
     supabase
       .from("products")
-      .select("id, name, price, image_url")
+      .select(
+        `
+      id,
+      name,
+      price,
+      image_url,
+      elders (
+        id,
+        first_name,
+        last_name,
+        avatar_url
+      )
+    `
+      )
       .order("created_at", { ascending: false })
       .then(({ data, error }) => {
         if (!error && data) setDbProducts(data);
@@ -389,67 +399,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Products */}
-        <div className="px-4 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-800">
-              สินค้าของเรา
-            </h2>
-            <Button variant="ghost" size="sm" className="text-gray-500">
-              <span className="mr-1">›</span>
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            {products.map((product) => (
-              <Card
-                key={product.id}
-                className="bg-white shadow-sm hover:shadow-md transition-shadow"
-              >
-                <CardContent className="p-3">
-                  <div className="aspect-square bg-gray-100 rounded-lg mb-3 overflow-hidden">
-                    <img
-                      src={product.image || "/placeholder.svg"}
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <h3 className="font-medium text-gray-800 text-sm mb-1 line-clamp-2">
-                    {product.name}
-                  </h3>
-                  <div className="flex items-center gap-1 mb-2">
-                    <div className="flex">
-                      {[...Array(5)].map((_, i) => (
-                        <span
-                          key={i}
-                          className={`text-xs ${
-                            i < Math.floor(product.rating)
-                              ? "text-yellow-400"
-                              : "text-gray-300"
-                          }`}
-                        >
-                          ★
-                        </span>
-                      ))}
-                    </div>
-                    <span className="text-xs text-gray-500">
-                      ({product.rating})
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-green-600">
-                      {product.price}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      {product.sold}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-
+        {/* Products from database */}
         <div className="px-4 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-800">
@@ -471,6 +421,21 @@ export default function HomePage() {
                       className="w-full h-full object-cover"
                     />
                   </div>
+
+                  {/* ✅ Elder info */}
+                  {product.elders && (
+                    <div className="flex items-center mb-2">
+                      <img
+                        src={product.elders.avatar_url || "/placeholder.svg"}
+                        alt={product.elders.first_name}
+                        className="w-6 h-6 rounded-full mr-2"
+                      />
+                      <span className="text-sm text-gray-600">
+                        {product.elders.first_name} {product.elders.last_name}
+                      </span>
+                    </div>
+                  )}
+
                   <h3 className="font-medium text-gray-800 text-sm mb-1 line-clamp-2">
                     {product.name}
                   </h3>
