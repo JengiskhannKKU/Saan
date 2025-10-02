@@ -59,7 +59,7 @@ export default function VolunteerRegisterPage() {
         })
       );
 
-      router.push("/volunteer/home");
+      router.push("/volunteer");
     } catch (err: any) {
       setError(err.message || "เกิดข้อผิดพลาด");
     } finally {

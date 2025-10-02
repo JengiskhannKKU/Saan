@@ -86,7 +86,7 @@ export default async function ElderDetail({
                     )}
                   </div>
                   <div className="flex gap-2">
-                    <Link href={`/volunteer/${elder.id}/edit-product/${p.id}`}>
+                    <Link href={`/broker/${elder.id}/edit-product/${p.id}`}>
                       <Button variant="outline" size="sm">
                         แก้ไข
                       </Button>
@@ -101,7 +101,7 @@ export default async function ElderDetail({
           )}
         </div>
 
-        <Link href={`/volunteer/${elder.id}/add-product`}>
+        <Link href={`/broker/${elder.id}/add-product`}>
           <Button className="w-full bg-green-600 hover:bg-green-700">
             เพิ่มสินค้า
           </Button>

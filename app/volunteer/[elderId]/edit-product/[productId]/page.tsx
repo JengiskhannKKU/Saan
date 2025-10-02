@@ -51,11 +51,11 @@ export default function EditProductPage() {
         const ext = imageFile.name.split(".").pop();
         const fileName = `${productId}-${Date.now()}.${ext}`;
         const { error: uploadError } = await supabase.storage
-          .from("elder-avatars") // or create 'product-images' bucket
+          .from("product-images") // or create 'product-images' bucket
           .upload(fileName, imageFile, { upsert: true });
         if (uploadError) throw uploadError;
 
-        const { data } = supabase.storage.from("elder-avatars").getPublicUrl(fileName);
+        const { data } = supabase.storage.from("product-images").getPublicUrl(fileName);
         image_url = data.publicUrl;
       }
 

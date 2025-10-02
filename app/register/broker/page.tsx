@@ -58,7 +58,7 @@ export default function BrokerRegisterPage() {
         })
       );
 
-      router.push("/broker/home");
+      router.push("/broker");
     } catch (err: any) {
       setError(err.message || "เกิดข้อผิดพลาด");
     } finally {

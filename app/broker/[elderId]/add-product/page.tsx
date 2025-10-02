@@ -39,14 +39,14 @@ export default function AddProductPage() {
         const ext = imageFile.name.split(".").pop();
         const fileName = `${user.id}/${Date.now()}.${ext}`;
         const { error: uploadError } = await supabase.storage
-          .from("elder-avatars") // ✅ reuse the same bucket or create `product-images`
+          .from("product-images") // ✅ reuse the same bucket or create `product-images`
           .upload(fileName, imageFile);
 
         if (uploadError) throw uploadError;
 
         const {
           data: { publicUrl },
-        } = supabase.storage.from("elder-avatars").getPublicUrl(fileName);
+        } = supabase.storage.from("product-images").getPublicUrl(fileName);
 
         image_url = publicUrl;
       }
@@ -63,7 +63,7 @@ export default function AddProductPage() {
 
       if (insertError) throw insertError;
 
-      router.push(`/volunteer/${elderId}`);
+      router.push(`/broker/${elderId}`);
     } catch (err: any) {
       setError(err.message);
     } finally {
