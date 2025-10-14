@@ -1,424 +1,307 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  Search,
-  ShoppingCart,
-  User,
-  Menu,
-  Plus,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { createClient } from "@/lib/supabase/client";
-import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import Image from "next/image";
 import { AppLayout } from "@/components/layout/app-layout";
-import ProductCardLink from "@/components/ProductCard";
-
-const categories = [
-  { id: "pottery", name: "เครื่องปั้นดินเผา", active: true },
-  { id: "wood", name: "ไม้", active: false },
-  { id: "accessories", name: "เครื่องประดับ", active: false },
-  { id: "fabric", name: "ผ้า", active: false },
-];
-
-const featuredProducts = [
-  {
-    id: 1,
-    name: "กระถางดิน",
-    price: 159,
-    image: "/ceramic-pottery-pot.jpg",
-    rating: 4.5,
-    category: "แนะนำพิเศษ",
-    description: "กระถางดินเผาคุณภาพสูงสำหรับปลูกต้นไม้",
-    sold: "ขายแล้ว 50+",
-  },
-  {
-    id: 2,
-    name: "ชุดชาไม้",
-    price: 169,
-    image: "/wooden-tea-set.jpg",
-    rating: 4.8,
-    category: "ยอดนิยม",
-    description: "ชุดชาไม้แกะสลักด้วยมือ สไตล์ไทยดั้งเดิม",
-    sold: "ขายแล้ว 30+",
-  },
-  {
-    id: 3,
-    name: "ผ้าทอมือลายไทย",
-    price: 459,
-    image: "/thai-handwoven-fabric.jpg",
-    rating: 4.7,
-    category: "ใหม่",
-    description: "ผ้าทอมือลายไทยดั้งเดิม คุณภาพพรีเมียม",
-    sold: "ขายแล้ว 25+",
-  },
-  {
-    id: 4,
-    name: "ชุดจานไม้",
-    price: 179,
-    image: "/wooden-plate-set.jpg",
-    rating: 4.6,
-    category: "คลาสสิค",
-    description: "ชุดจานไม้สำหรับเสิร์ฟอาหารไทย",
-    sold: "ขายแล้ว 40+",
-  },
-];
-
-const products = [
-  {
-    id: 1,
-    name: "กระถางดิน",
-    price: "฿159",
-    image: "/ceramic-pottery-pot.jpg",
-    rating: 4.5,
-    sold: "ขายแล้ว 50+",
-  },
-  {
-    id: 2,
-    name: "ชุดชาไม้",
-    price: "฿169",
-    image: "/wooden-tea-set.jpg",
-    rating: 4.8,
-    sold: "ขายแล้ว 30+",
-  },
-  {
-    id: 3,
-    name: "ผ้าทอมือลายไทย",
-    price: "฿459",
-    image: "/thai-handwoven-fabric.jpg",
-    rating: 4.7,
-    sold: "ขายแล้ว 25+",
-  },
-  {
-    id: 4,
-    name: "ชุดจานไม้",
-    price: "฿179",
-    image: "/wooden-plate-set.jpg",
-    rating: 4.6,
-    sold: "ขายแล้ว 40+",
-  },
-];
+import {
+  Box,
+  Typography,
+  Avatar,
+  Card,
+  CardContent,
+  LinearProgress,
+  IconButton,
+  Container,
+} from "@mui/material";
+import Grid from "@mui/material/Grid";
+import { ArrowForwardIos, LocationOn } from "@mui/icons-material";
+import Image from "next/image";
 
 export default function HomePage() {
-  const [activeCategory, setActiveCategory] = useState("pottery");
-  const [user, setUser] = useState<any>(null);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-
-  const [dbProducts, setDbProducts] = useState<any[]>([]);
-
-  const nextSlide = () => {
-    if (isTransitioning) return;
-    setIsTransitioning(true);
-    setCurrentSlide((prev) => (prev + 1) % featuredProducts.length);
-    setTimeout(() => setIsTransitioning(false), 700);
-  };
-
-  const prevSlide = () => {
-    if (isTransitioning) return;
-    setIsTransitioning(true);
-    setCurrentSlide(
-      (prev) => (prev - 1 + featuredProducts.length) % featuredProducts.length
-    );
-    setTimeout(() => setIsTransitioning(false), 700);
-  };
-
-  const getProductAtOffset = (offset: number) => {
-    const index =
-      (currentSlide + offset + featuredProducts.length) %
-      featuredProducts.length;
-    return featuredProducts[index];
-  };
-
-  useEffect(() => {
-    const supabase = createClient();
-
-    // keep auth listener
-    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    // 🔹 Fetch products with elder info
-    supabase
-      .from("products")
-      .select(
-        `
-      id,
-      name,
-      price,
-      image_url,
-      elders (
-        id,
-        first_name,
-        last_name,
-        avatar_url
-      )
-    `
-      )
-      .order("created_at", { ascending: false })
-      .then(({ data, error }) => {
-        if (!error && data) setDbProducts(data);
-      });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
   return (
     <AppLayout>
-      <div className="min-h-screen bg-gray-50">
-        {/* Hero Banner */}
-        <div className="px-4 py-6">
-          <div className="bg-gradient-to-r from-green-400 to-green-500 rounded-2xl p-6 text-white relative overflow-hidden">
-            <div className="relative z-10">
-              <h1 className="text-xl font-bold mb-2">
-                ทุกการช้อปของคุณ
-                <br />
-                คือพลังสนับสนุนการใช้
-              </h1>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-2 h-2 bg-pink-400 rounded-full"></div>
-                <span className="text-sm">ช้อป saan = 1 บาท</span>
-              </div>
-              {user ? (
-                <Link href="/dashboard">
-                  <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full">
-                    ไปยังแดชบอร์ด
-                  </Button>
-                </Link>
-              ) : (
-                <Link href="/auth/sign-up">
-                  <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full">
-                    เริ่มต้น
-                  </Button>
-                </Link>
-              )}
-            </div>
-            <div className="absolute right-4 top-4 opacity-20">
-              <div className="w-16 h-16 border-2 border-white rounded-full flex items-center justify-center">
-                <div className="w-8 h-8 bg-white rounded-full"></div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <Container
+        maxWidth="sm"
+        sx={{
+          minHeight: "100vh",
+          bgcolor: "#f9fafb",
+          py: { xs: 3, sm: 4 },
+          display: "flex",
+          flexDirection: "column",
+          gap: 3,
+        }}
+      >
+        {/* Greeting Card */}
+        <Card sx={{ borderRadius: 3, boxShadow: 1 }}>
+          <CardContent>
+            <Box display="flex" alignItems="center" gap={2}>
+              <Avatar
+                src="/profile.jpg"
+                sx={{
+                  width: 56,
+                  height: 56,
+                  border: "2px solid #16a34a",
+                }}
+              />
+              <Box>
+                <Typography variant="subtitle1" fontWeight={600}>
+                  สวัสดี{" "}
+                  <Box component="span" sx={{ color: "#16a34a" }}>
+                    คุณปีเตอร์ พาร์เกอร์
+                  </Box>
+                </Typography>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  display="block"
+                >
+                  เหลืออีก <strong>2 วัน</strong> ก่อนถึงวันสิ้นเดือน
+                </Typography>
+              </Box>
+            </Box>
 
-        {/* Categories */}
-        <div className="px-4 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-800">
-              ประเภทสินค้า
-            </h2>
-            <Button variant="ghost" size="sm" className="text-gray-500">
-              <span className="mr-1">›</span>
-            </Button>
-          </div>
-
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {categories.map((category) => (
-              <Button
-                key={category.id}
-                variant={category.active ? "default" : "outline"}
-                size="sm"
-                className={`whitespace-nowrap ${category.active
-                    ? "bg-gray-800 text-white"
-                    : "bg-white text-gray-600 border-gray-200"
-                  }`}
-                onClick={() => setActiveCategory(category.id)}
+            <Box mt={2}>
+              <LinearProgress
+                variant="determinate"
+                value={30}
+                sx={{
+                  height: 8,
+                  borderRadius: 5,
+                  bgcolor: "#e5e7eb",
+                  "& .MuiLinearProgress-bar": { bgcolor: "#16a34a" },
+                }}
+              />
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                display="block"
+                mt={0.5}
               >
-                {category.name}
-              </Button>
-            ))}
-          </div>
-        </div>
+                1/3 สินค้า
+              </Typography>
+            </Box>
 
-        {/* Featured Products Carousel */}
-        <section className="py-8 px-4 bg-gradient-to-b from-green-50 to-gray-50">
-          <div className="container mx-auto">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-4 text-balance">
-                สินค้าที่คุณอาจชอบ
-              </h2>
-              <p className="text-gray-600 text-pretty">
-                สินค้าคัดสรรพิเศษเพื่อคุณโดยเฉพาะ
-              </p>
-            </div>
+            {/* ✅ Grid Fixed & Responsive */}
+            <Grid container spacing={2} sx={{ mt: 1 , display: "flex", justifyContent: "center"}}>
+              <Grid size={6} >
+                <Card
+                  sx={{
+                    bgcolor: "#f0fdf4",
+                    borderRadius: 3,
+                    textAlign: "center",
+                    boxShadow: "none",
+                    display: "flex",
+                    flexDirection: "column"
+                  }}
+                >
+                  <Typography variant="subtitle2" color="text.secondary">
+                    รายได้วันนี้
+                  </Typography>
+                  <Typography
+                    variant="h6"
+                    sx={{ color: "#16a34a", fontWeight: "bold" }}
+                  >
+                    240 บาท
+                  </Typography>
+                </Card>
+              </Grid>
 
-            <div className="relative max-w-6xl mx-auto">
-              <div className="relative overflow-hidden">
-                <div className="flex items-center justify-center gap-8 py-8">
-                  {/* Previous Product (Blurred) */}
-                  <div className="hidden lg:block w-64 transition-all duration-700 ease-in-out">
-                    <div className="relative aspect-square rounded-2xl overflow-hidden transform hover:scale-105 transition-transform duration-300">
-                      <Image
-                        src={getProductAtOffset(-1).image || "/placeholder.svg"}
-                        alt="Previous product"
-                        fill
-                        className="object-cover transition-all duration-700 ease-in-out blur-sm opacity-60 hover:opacity-80"
-                      />
-                      <div className="absolute inset-0 bg-black/20 transition-all duration-700 ease-in-out"></div>
-                    </div>
-                    <div className="text-center mt-4 opacity-60 transition-opacity duration-700">
-                      <h4 className="font-medium text-sm text-gray-800">
-                        {getProductAtOffset(-1).name}
-                      </h4>
-                      <p className="text-xs text-gray-600">
-                        ฿{getProductAtOffset(-1).price}
-                      </p>
-                    </div>
-                  </div>
+              <Grid size={6} >
+                <Card
+                  sx={{
+                    bgcolor: "#f0fdf4",
+                    borderRadius: 3,
+                    textAlign: "center",
+                    boxShadow: "none",
+                    display: "flex",
+                    flexDirection: "column"
+                  }}
+                >
+                  <Typography variant="subtitle2" color="text.secondary">
+                    ออเดอร์วันนี้
+                  </Typography>
+                  <Typography
+                    variant="h6"
+                    sx={{ color: "#16a34a", fontWeight: "bold" }}
+                  >
+                    20 ออเดอร์
+                  </Typography>
+                </Card>
+              </Grid>
 
-                  {/* Current Product (Featured) */}
-                  <div className="transition-all duration-700 ease-in-out transform">
-                    <Card className="w-80 shadow-2xl border-0 overflow-hidden transform hover:scale-105 transition-transform duration-300 bg-white">
-                      <div className="relative aspect-square">
-                        <Image
-                          src={
-                            getProductAtOffset(0).image || "/placeholder.svg"
-                          }
-                          alt={getProductAtOffset(0).name}
-                          fill
-                          className="object-cover transition-all duration-700 ease-in-out"
-                        />
-                        <Badge className="absolute top-4 left-4 bg-green-500 text-white transition-all duration-300">
-                          {getProductAtOffset(0).category}
-                        </Badge>
-                      </div>
-                      <CardContent className="p-6 text-center">
-                        <div className="flex items-center justify-center gap-1 mb-2">
-                          {[...Array(5)].map((_, i) => (
-                            <span
-                              key={i}
-                              className={`text-sm ${i < Math.floor(getProductAtOffset(0).rating)
-                                  ? "text-yellow-400"
-                                  : "text-gray-300"
-                                }`}
-                            >
-                              ★
-                            </span>
-                          ))}
-                          <span className="text-sm text-gray-500 ml-1">
-                            ({getProductAtOffset(0).rating})
-                          </span>
-                        </div>
-                        <h3 className="text-xl font-bold text-gray-800 mb-2">
-                          {getProductAtOffset(0).name}
-                        </h3>
-                        <p className="text-gray-600 mb-4 text-sm">
-                          {getProductAtOffset(0).description}
-                        </p>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <span className="text-2xl font-bold text-green-600">
-                              ฿{getProductAtOffset(0).price}
-                            </span>
-                            <p className="text-xs text-gray-500">
-                              {getProductAtOffset(0).sold}
-                            </p>
-                          </div>
-                          <Button className="bg-black text-white hover:bg-gray-800 transition-colors duration-300">
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add to Cart
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
+            </Grid>
+          </CardContent>
+        </Card>
 
-                  {/* Next Product (Blurred) */}
-                  <div className="hidden lg:block w-64 transition-all duration-700 ease-in-out">
-                    <div className="relative aspect-square rounded-2xl overflow-hidden transform hover:scale-105 transition-transform duration-300">
-                      <Image
-                        src={getProductAtOffset(1).image || "/placeholder.svg"}
-                        alt="Next product"
-                        fill
-                        className="object-cover transition-all duration-700 ease-in-out blur-sm opacity-60 hover:opacity-80"
-                      />
-                      <div className="absolute inset-0 bg-black/20 transition-all duration-700 ease-in-out"></div>
-                    </div>
-                    <div className="text-center mt-4 opacity-60 transition-opacity duration-700">
-                      <h4 className="font-medium text-sm text-gray-800">
-                        {getProductAtOffset(1).name}
-                      </h4>
-                      <p className="text-xs text-gray-600">
-                        ฿{getProductAtOffset(1).price}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        {/* Banner */}
+        <Card
+          sx={{
+            background: "linear-gradient(to right, #22c55e, #16a34a)",
+            borderRadius: 4,
+            color: "white",
+            overflow: "hidden",
+            boxShadow: 2,
+          }}
+        >
+          <CardContent sx={{ position: "relative", zIndex: 2 }}>
+            <Typography variant="h6" fontWeight="700" mb={1}>
+              ทุกการช่วยเหลือของคุณ {"ปีเตอร์ พาร์เกอร์"}
+              <br />
+              คือพลังสนับสนุนการใช้ผู้สูงอายุ
+            </Typography>
+            <Box display="flex" alignItems="center" gap={1}>
+              <Box
+                sx={{
+                  width: 8,
+                  height: 8,
+                  bgcolor: "#f472b6",
+                  borderRadius: "50%",
+                }}
+              />
+              <Typography variant="caption">
+                1 การช่วยเหลือ = การสร้างความมั่นคงให้กับผู้สูงอายุ
+              </Typography>
+            </Box>
+          </CardContent>
+          <Box
+            sx={{
+              position: "absolute",
+              right: 16,
+              top: 16,
+              opacity: 0.15,
+            }}
+          >
+            <Box
+              sx={{
+                width: 64,
+                height: 64,
+                border: "2px solid white",
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Box
+                sx={{
+                  width: 32,
+                  height: 32,
+                  bgcolor: "white",
+                  borderRadius: "50%",
+                }}
+              />
+            </Box>
+          </Box>
+        </Card>
 
-              {/* Navigation Arrows */}
-              <Button
-                variant="outline"
-                size="icon"
-                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur-sm hover:bg-white transition-all duration-300 hover:scale-110"
-                onClick={prevSlide}
-                disabled={isTransitioning}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur-sm hover:bg-white transition-all duration-300 hover:scale-110"
-                onClick={nextSlide}
-                disabled={isTransitioning}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+        {/* Products You Manage */}
+        <Box>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            mb={1}
+          >
+            <Typography fontWeight="600" variant="subtitle1">
+              สินค้าที่คุณดูแลอยู่
+            </Typography>
+            <IconButton size="small">
+              <ArrowForwardIos sx={{ fontSize: 16, color: "#16a34a" }} />
+            </IconButton>
+          </Box>
 
-              {/* Dots Indicator */}
-              <div className="flex justify-center gap-2 mt-8">
-                {featuredProducts.map((_, index) => (
-                  <button
-                    key={index}
-                    className={`w-3 h-3 rounded-full transition-all duration-300 hover:scale-125 ${index === currentSlide
-                        ? "bg-green-500 scale-110"
-                        : "bg-gray-300 hover:bg-gray-400"
-                      }`}
-                    onClick={() => {
-                      if (!isTransitioning) {
-                        setIsTransitioning(true);
-                        setCurrentSlide(index);
-                        setTimeout(() => setIsTransitioning(false), 700);
-                      }
+          <Card sx={{ borderRadius: 3, boxShadow: 1 }}>
+            <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <Image
+                src="/product.jpg"
+                alt="product"
+                width={70}
+                height={70}
+                style={{ borderRadius: 10, objectFit: "cover" }}
+              />
+              <Box flex={1}>
+                <Typography fontWeight="600">กระติ๊บข้าว</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  812 บาท/ชิ้น
+                </Typography>
+                <Box mt={0.5} display="flex" alignItems="center" gap={1}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      bgcolor: "#dcfce7",
+                      color: "#16a34a",
+                      px: 1,
+                      borderRadius: 1,
+                      fontWeight: 500,
                     }}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
+                  >
+                    พร้อมส่ง
+                  </Typography>
+                </Box>
+              </Box>
+              <ArrowForwardIos sx={{ fontSize: 16, color: "#9ca3af" }} />
+            </CardContent>
+          </Card>
+        </Box>
 
-        {/* Products from database */}
-        <div className="px-4 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-800">
-              สินค้าของเรา
-            </h2>
-          </div>
+        {/* Elderly Near You */}
+        <Box>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            mb={1}
+          >
+            <Typography fontWeight="600" variant="subtitle1">
+              ผู้สูงอายุที่อยู่ใกล้คุณ
+            </Typography>
+            <IconButton size="small">
+              <ArrowForwardIos sx={{ fontSize: 16, color: "#16a34a" }} />
+            </IconButton>
+          </Box>
 
-          <div className="grid grid-cols-2 gap-4">
-            {dbProducts.map((product) => (
-              <ProductCardLink key={product.id} product={product} />
-            ))}
-
-            {/* still show sample products if db empty */}
-            {dbProducts.length === 0 && (
-              <p className="text-sm text-gray-500 col-span-2 text-center">
-                ยังไม่มีสินค้า
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
+          {[
+            {
+              name: "คุณบุญมี สิมารักษ์ จิตตา",
+              distance: "750 ม.",
+              works: ["ผลงานหัตถกรรมไม้ไผ่ทำแปรง", "พวงกุญแจและไม้ลุงกลึง"],
+              avatar: "/elder1.jpg",
+            },
+            {
+              name: "พวงกุญแจของชาวสานชลธี",
+              distance: "2 กม.",
+              works: ["งานปักผ้าไหมและงานฝีมือ"],
+              avatar: "/elder2.jpg",
+            },
+          ].map((elder, i) => (
+            <Card key={i} sx={{ borderRadius: 3, boxShadow: 1, mb: 1.5 }}>
+              <CardContent
+                sx={{ display: "flex", alignItems: "center", gap: 2 }}
+              >
+                <Avatar
+                  src={elder.avatar}
+                  sx={{
+                    width: 50,
+                    height: 50,
+                    border: "2px solid #16a34a",
+                  }}
+                />
+                <Box flex={1}>
+                  <Typography fontWeight="600">{elder.name}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    <LocationOn fontSize="inherit" color="success" />{" "}
+                    {elder.distance}
+                  </Typography>
+                  {elder.works.map((w, idx) => (
+                    <Typography key={idx} variant="caption" display="block">
+                      • {w}
+                    </Typography>
+                  ))}
+                </Box>
+                <ArrowForwardIos sx={{ fontSize: 16, color: "#9ca3af" }} />
+              </CardContent>
+            </Card>
+          ))}
+        </Box>
+      </Container>
     </AppLayout>
   );
 }
