@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation"; // ✅ add this
 import { AppLayout } from "@/components/layout/app-layout";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -34,6 +35,7 @@ type ElderCard = {
 
 export default function HomePage() {
   const supabase = createClient();
+  const router = useRouter(); // ✅ router instance
   const [elders, setElders] = useState<ElderCard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -52,6 +54,11 @@ export default function HomePage() {
 
     fetchElders();
   }, []);
+
+  // ✅ redirect handler
+  const handleCardClick = (id: string) => {
+    router.push(`/matching/tasks/${id}`);
+  };
 
   return (
     <AppLayout>
@@ -207,10 +214,17 @@ export default function HomePage() {
             elders.map((elder) => (
               <Card
                 key={elder.id}
+                onClick={() => handleCardClick(elder.id)} // ✅ clickable
                 sx={{
                   borderRadius: 3,
                   boxShadow: 1,
                   mb: 1.5,
+                  cursor: "pointer",
+                  transition: "transform 0.15s ease, box-shadow 0.15s ease",
+                  "&:hover": {
+                    transform: "translateY(-3px)",
+                    boxShadow: 3,
+                  },
                 }}
               >
                 <CardContent sx={{ display: "flex", gap: 2 }}>
@@ -226,7 +240,7 @@ export default function HomePage() {
                   <Box flex={1}>
                     <Typography fontWeight={600}>{elder.name}</Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {elder.phone} • {elder.location}
+                      {elder.phone}
                     </Typography>
 
                     {/* 🟢 Type: โพสต์สินค้า */}
@@ -246,12 +260,30 @@ export default function HomePage() {
                         >
                           โพสต์สินค้า
                         </Typography>
-                        {elder.product_descriptions?.length ? (
-                          <ExpandableText
-                            text={elder.product_descriptions.join(" ")}
-                            maxChars={150}
-                          />
-                        ) : null}
+                        {elder.task_type === "โพสต์สินค้า" &&
+                          elder.product_descriptions?.map((desc, i) => (
+                            <Typography
+                              key={i}
+                              variant="caption"
+                              display="block"
+                            >
+                              • {desc}
+                            </Typography>
+                          ))}
+
+                        {elder.location && (
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            display="flex"
+                            alignItems="center"
+                            gap={0.3}
+                            mt={0.5}
+                          >
+                            <LocationOn fontSize="inherit" color="success" />{" "}
+                            {elder.location}
+                          </Typography>
+                        )}
                       </Box>
                     )}
 
@@ -300,6 +332,19 @@ export default function HomePage() {
                             maxChars={150}
                           />
                         ) : null}
+                        {elder.location && (
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            display="flex"
+                            alignItems="center"
+                            gap={0.3}
+                            mt={0.5}
+                          >
+                            <LocationOn fontSize="inherit" color="success" />{" "}
+                            {elder.location}
+                          </Typography>
+                        )}
                       </Box>
                     )}
                   </Box>

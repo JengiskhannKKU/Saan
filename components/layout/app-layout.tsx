@@ -48,7 +48,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       >
         {[
           { label: "หน้าหลัก", icon: <ShoppingBag/> },
-          { label: "ข้อมูลผู้สูงอายุ", icon: <LocationOn/> },
+          { label: "จับคู่ผู้สูงอายุ", icon: <LocationOn/> },
           { label: "task", icon: <ShoppingBag/> },
           { label: "ฉัน", icon: <Avatar sx={{ width: 24, height: 24 }} /> },
         ].map((item, i) => (

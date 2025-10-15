@@ -25,6 +25,7 @@ export default function TaskDetailPage() {
   const [elder, setElder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
+  const [adding, setAdding] = useState(false);
 
   useEffect(() => {
     const fetchElder = async () => {
@@ -41,6 +42,57 @@ export default function TaskDetailPage() {
     fetchElder();
   }, [params.id, supabase]);
 
+  const handleAddTask = async () => {
+    try {
+      setAdding(true);
+
+      // ✅ get logged-in user
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        alert("กรุณาเข้าสู่ระบบก่อนเพิ่ม task");
+        setAdding(false);
+        return;
+      }
+
+      // ✅ insert into volunteer_tasks
+      const { error } = await supabase.from("volunteer_tasks").insert({
+        elder_id: elder.id,
+        volunteer_id: user.id,
+        selected_tasks: selectedTasks,
+        status: "active",
+      });
+
+      if (error) {
+        console.error("Insert error:", error);
+        alert("เกิดข้อผิดพลาดขณะเพิ่มงาน");
+      } else {
+        alert("เพิ่ม task สำเร็จ!");
+        router.push("/tasks");
+      }
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const formatDistance = (d: number) =>
+    d >= 1 ? `${d.toFixed(1)} กม.` : `${(d * 1000).toFixed(0)} ม.`;
+
+  const handleToggleTask = (task: string) => {
+    if (elder.task_type === "โพสต์สินค้า") {
+      setSelectedTasks((prev) =>
+        prev.includes(task) ? prev.filter((t) => t !== task) : [...prev, task]
+      );
+    } else {
+      setSelectedTasks((prev) => (prev[0] === task ? [] : [task]));
+    }
+  };
+
+  const isSelected = (task: string) => selectedTasks.includes(task);
+
   if (loading)
     return (
       <Box className="min-h-screen flex items-center justify-center">
@@ -55,24 +107,6 @@ export default function TaskDetailPage() {
       </Box>
     );
 
-  const formatDistance = (d: number) =>
-    d >= 1 ? `${d.toFixed(1)} กม.` : `${(d * 1000).toFixed(0)} ม.`;
-
-  // ✅ For toggling task selection
-  const handleToggleTask = (task: string) => {
-    if (elder.task_type === "โพสต์สินค้า") {
-      // multiple selectable
-      setSelectedTasks((prev) =>
-        prev.includes(task) ? prev.filter((t) => t !== task) : [...prev, task]
-      );
-    } else {
-      // single select for แพ็คของ
-      setSelectedTasks((prev) => (prev[0] === task ? [] : [task]));
-    }
-  };
-
-  const isSelected = (task: string) => selectedTasks.includes(task);
-
   return (
     <AppLayout>
       <Box className="min-h-screen bg-white">
@@ -82,7 +116,7 @@ export default function TaskDetailPage() {
             <ArrowBack />
           </Button>
           <Typography variant="h6" className="flex-1 text-center font-semibold">
-            {elder.task_type === "โพสต์สินค้า"? elder.name : elder.product_name}
+            {elder.task_type === "โพสต์สินค้า" ? elder.name : elder.product_name}
           </Typography>
         </Box>
 
@@ -118,18 +152,12 @@ export default function TaskDetailPage() {
                 ))}
 
                 <Box className="mt-4 flex flex-col space-y-2">
-                  {/* Selectable buttons */}
                   <Button
                     variant={isSelected("โพสต์สินค้า") ? "contained" : "outlined"}
                     color="success"
                     fullWidth
                     onClick={() => handleToggleTask("โพสต์สินค้า")}
-                    sx={{
-                      borderRadius: "12px",
-                      fontWeight: 600,
-                      borderWidth: 2,
-                      textTransform: "none",
-                    }}
+                    sx={{ borderRadius: "12px", fontWeight: 600, borderWidth: 2 }}
                   >
                     โพสต์สินค้า
                   </Button>
@@ -138,12 +166,7 @@ export default function TaskDetailPage() {
                     color="success"
                     fullWidth
                     onClick={() => handleToggleTask("เพิ่มสินค้า")}
-                    sx={{
-                      borderRadius: "12px",
-                      fontWeight: 600,
-                      borderWidth: 2,
-                      textTransform: "none",
-                    }}
+                    sx={{ borderRadius: "12px", fontWeight: 600, borderWidth: 2 }}
                   >
                     เพิ่มสินค้า
                   </Button>
@@ -151,18 +174,15 @@ export default function TaskDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Add task button */}
             <Button
               variant="contained"
               color="success"
               fullWidth
-              sx={{
-                py: 1.4,
-                fontWeight: 600,
-                borderRadius: "12px",
-              }}
+              disabled={adding || selectedTasks.length === 0}
+              onClick={handleAddTask}
+              sx={{ py: 1.4, fontWeight: 600, borderRadius: "12px" }}
             >
-              เพิ่ม task
+              {adding ? "กำลังเพิ่ม..." : "เพิ่ม task"}
             </Button>
           </Box>
         ) : (
@@ -178,7 +198,6 @@ export default function TaskDetailPage() {
               />
             )}
 
-            {/* Product title + price */}
             <Typography variant="h6" fontWeight="bold">
               {elder.product_name}
             </Typography>
@@ -188,7 +207,6 @@ export default function TaskDetailPage() {
               </Typography>
             )}
 
-            {/* Expandable description */}
             {elder.product_descriptions?.length && (
               <ExpandableText
                 text={elder.product_descriptions.join(" ")}
@@ -196,7 +214,6 @@ export default function TaskDetailPage() {
               />
             )}
 
-            {/* Elder Info */}
             <Card variant="outlined" className="mt-4">
               <CardContent className="flex items-center space-x-3">
                 <Avatar src={elder.avatar_url} sx={{ width: 48, height: 48 }} />
@@ -209,19 +226,13 @@ export default function TaskDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Single-select task */}
             <Box className="mt-2">
               <Button
                 variant={isSelected("แพ็คสินค้า") ? "contained" : "outlined"}
                 color="success"
                 fullWidth
                 onClick={() => handleToggleTask("แพ็คสินค้า")}
-                sx={{
-                  borderRadius: "12px",
-                  fontWeight: 600,
-                  borderWidth: 2,
-                  textTransform: "none",
-                }}
+                sx={{ borderRadius: "12px", fontWeight: 600, borderWidth: 2 }}
               >
                 แพ็คสินค้า
               </Button>
@@ -230,15 +241,11 @@ export default function TaskDetailPage() {
                 variant="contained"
                 color="success"
                 fullWidth
-                className="mt-3"
-                sx={{
-                    mt: 4,
-                    py: 1.4,
-                    fontWeight: 600,
-                    borderRadius: "12px",
-                }}
+                disabled={adding || selectedTasks.length === 0}
+                onClick={handleAddTask}
+                sx={{ mt: 3, py: 1.4, fontWeight: 600, borderRadius: "12px" }}
               >
-                เพิ่ม task
+                {adding ? "กำลังเพิ่ม..." : "เพิ่ม task"}
               </Button>
             </Box>
           </Box>
