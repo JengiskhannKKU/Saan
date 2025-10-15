@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
+import { createClient } from "@/lib/supabase/client";
 import {
   Box,
   Typography,
@@ -10,12 +12,47 @@ import {
   LinearProgress,
   IconButton,
   Container,
+  CircularProgress,
 } from "@mui/material";
-import Grid from "@mui/material/Grid";
 import { ArrowForwardIos, LocationOn } from "@mui/icons-material";
 import Image from "next/image";
+import ExpandableText from "@/components/ui/ExpandableText";
+
+type ElderCard = {
+  id: string;
+  task_type: "โพสต์สินค้า" | "แพ็คของ";
+  avatar_url: string | null;
+  name: string;
+  phone: string;
+  location: string;
+  product_name?: string | null;
+  product_image?: string | null;
+  product_price?: number | null;
+  market_share?: number | null;
+  product_descriptions?: string[] | null;
+};
 
 export default function HomePage() {
+  const supabase = createClient();
+  const [elders, setElders] = useState<ElderCard[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchElders = async () => {
+      const { data, error } = await supabase
+        .from("elder_cards")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) console.error("Error fetching elders:", error);
+      else setElders(data as ElderCard[]);
+
+      setIsLoading(false);
+    };
+
+    fetchElders();
+  }, []);
+
   return (
     <AppLayout>
       <Container
@@ -78,56 +115,6 @@ export default function HomePage() {
                 1/3 สินค้า
               </Typography>
             </Box>
-
-            {/* ✅ Grid Fixed & Responsive */}
-            <Grid container spacing={2} sx={{ mt: 1 , display: "flex", justifyContent: "center"}}>
-              <Grid size={6} >
-                <Card
-                  sx={{
-                    bgcolor: "#f0fdf4",
-                    borderRadius: 3,
-                    textAlign: "center",
-                    boxShadow: "none",
-                    display: "flex",
-                    flexDirection: "column"
-                  }}
-                >
-                  <Typography variant="subtitle2" color="text.secondary">
-                    รายได้วันนี้
-                  </Typography>
-                  <Typography
-                    variant="h6"
-                    sx={{ color: "#16a34a", fontWeight: "bold" }}
-                  >
-                    240 บาท
-                  </Typography>
-                </Card>
-              </Grid>
-
-              <Grid size={6} >
-                <Card
-                  sx={{
-                    bgcolor: "#f0fdf4",
-                    borderRadius: 3,
-                    textAlign: "center",
-                    boxShadow: "none",
-                    display: "flex",
-                    flexDirection: "column"
-                  }}
-                >
-                  <Typography variant="subtitle2" color="text.secondary">
-                    ออเดอร์วันนี้
-                  </Typography>
-                  <Typography
-                    variant="h6"
-                    sx={{ color: "#16a34a", fontWeight: "bold" }}
-                  >
-                    20 ออเดอร์
-                  </Typography>
-                </Card>
-              </Grid>
-
-            </Grid>
           </CardContent>
         </Card>
 
@@ -192,57 +179,7 @@ export default function HomePage() {
           </Box>
         </Card>
 
-        {/* Products You Manage */}
-        <Box>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-            mb={1}
-          >
-            <Typography fontWeight="600" variant="subtitle1">
-              สินค้าที่คุณดูแลอยู่
-            </Typography>
-            <IconButton size="small">
-              <ArrowForwardIos sx={{ fontSize: 16, color: "#16a34a" }} />
-            </IconButton>
-          </Box>
-
-          <Card sx={{ borderRadius: 3, boxShadow: 1 }}>
-            <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <Image
-                src="/product.jpg"
-                alt="product"
-                width={70}
-                height={70}
-                style={{ borderRadius: 10, objectFit: "cover" }}
-              />
-              <Box flex={1}>
-                <Typography fontWeight="600">กระติ๊บข้าว</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  812 บาท/ชิ้น
-                </Typography>
-                <Box mt={0.5} display="flex" alignItems="center" gap={1}>
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      bgcolor: "#dcfce7",
-                      color: "#16a34a",
-                      px: 1,
-                      borderRadius: 1,
-                      fontWeight: 500,
-                    }}
-                  >
-                    พร้อมส่ง
-                  </Typography>
-                </Box>
-              </Box>
-              <ArrowForwardIos sx={{ fontSize: 16, color: "#9ca3af" }} />
-            </CardContent>
-          </Card>
-        </Box>
-
-        {/* Elderly Near You */}
+        {/* Elderly List */}
         <Box>
           <Box
             display="flex"
@@ -258,48 +195,129 @@ export default function HomePage() {
             </IconButton>
           </Box>
 
-          {[
-            {
-              name: "คุณบุญมี สิมารักษ์ จิตตา",
-              distance: "750 ม.",
-              works: ["ผลงานหัตถกรรมไม้ไผ่ทำแปรง", "พวงกุญแจและไม้ลุงกลึง"],
-              avatar: "/elder1.jpg",
-            },
-            {
-              name: "พวงกุญแจของชาวสานชลธี",
-              distance: "2 กม.",
-              works: ["งานปักผ้าไหมและงานฝีมือ"],
-              avatar: "/elder2.jpg",
-            },
-          ].map((elder, i) => (
-            <Card key={i} sx={{ borderRadius: 3, boxShadow: 1, mb: 1.5 }}>
-              <CardContent
-                sx={{ display: "flex", alignItems: "center", gap: 2 }}
+          {isLoading ? (
+            <Box textAlign="center" py={4}>
+              <CircularProgress color="success" />
+            </Box>
+          ) : elders.length === 0 ? (
+            <Typography color="text.secondary" textAlign="center" mt={2}>
+              ยังไม่มีข้อมูลผู้สูงอายุ
+            </Typography>
+          ) : (
+            elders.map((elder) => (
+              <Card
+                key={elder.id}
+                sx={{
+                  borderRadius: 3,
+                  boxShadow: 1,
+                  mb: 1.5,
+                }}
               >
-                <Avatar
-                  src={elder.avatar}
-                  sx={{
-                    width: 50,
-                    height: 50,
-                    border: "2px solid #16a34a",
-                  }}
-                />
-                <Box flex={1}>
-                  <Typography fontWeight="600">{elder.name}</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    <LocationOn fontSize="inherit" color="success" />{" "}
-                    {elder.distance}
-                  </Typography>
-                  {elder.works.map((w, idx) => (
-                    <Typography key={idx} variant="caption" display="block">
-                      • {w}
+                <CardContent sx={{ display: "flex", gap: 2 }}>
+                  <Avatar
+                    src={elder.avatar_url || "/placeholder-avatar.png"}
+                    sx={{
+                      width: 50,
+                      height: 50,
+                      border: "2px solid #16a34a",
+                    }}
+                  />
+
+                  <Box flex={1}>
+                    <Typography fontWeight={600}>{elder.name}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {elder.phone} • {elder.location}
                     </Typography>
-                  ))}
-                </Box>
-                <ArrowForwardIos sx={{ fontSize: 16, color: "#9ca3af" }} />
-              </CardContent>
-            </Card>
-          ))}
+
+                    {/* 🟢 Type: โพสต์สินค้า */}
+                    {elder.task_type === "โพสต์สินค้า" && (
+                      <Box mt={0.5}>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            bgcolor: "#dcfce7",
+                            color: "#16a34a",
+                            px: 1,
+                            py: 0.2,
+                            borderRadius: 1,
+                            fontWeight: 500,
+                            display: "inline-block",
+                          }}
+                        >
+                          โพสต์สินค้า
+                        </Typography>
+                        {elder.product_descriptions?.length ? (
+                          <ExpandableText
+                            text={elder.product_descriptions.join(" ")}
+                            maxChars={150}
+                          />
+                        ) : null}
+                      </Box>
+                    )}
+
+                    {/* 🟠 Type: แพ็คของ */}
+                    {elder.task_type === "แพ็คของ" && (
+                      <Box mt={1}>
+                        {elder.product_image && (
+                          <Image
+                            src={elder.product_image}
+                            alt={elder.product_name || "product"}
+                            width={160}
+                            height={160}
+                            style={{
+                              borderRadius: 10,
+                              objectFit: "cover",
+                              marginBottom: 6,
+                            }}
+                          />
+                        )}
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            bgcolor: "#dcfce7",
+                            color: "#16a34a",
+                            px: 1,
+                            py: 0.8,
+                            borderRadius: 1,
+                            fontWeight: 500,
+                            display: "inline-block",
+                          }}
+                        >
+                          แพ็คของ
+                        </Typography>
+                        {elder.product_name && (
+                          <Typography
+                            variant="body2"
+                            fontWeight={600}
+                            color="text.primary"
+                          >
+                            {elder.product_name}
+                          </Typography>
+                        )}
+                        {elder.product_price && (
+                          <Typography variant="caption" color="text.secondary">
+                            ราคา {elder.product_price} บาท
+                          </Typography>
+                        )}
+                        {elder.market_share && (
+                          <Typography variant="caption" color="text.secondary">
+                            • ส่วนแบ่งตลาด {elder.market_share}%
+                          </Typography>
+                        )}
+                        {elder.product_descriptions?.length ? (
+                          <ExpandableText
+                            text={elder.product_descriptions.join(" ")}
+                            maxChars={150}
+                          />
+                        ) : null}
+                      </Box>
+                    )}
+                  </Box>
+                  <ArrowForwardIos sx={{ fontSize: 16, color: "#9ca3af" }} />
+                </CardContent>
+              </Card>
+            ))
+          )}
         </Box>
       </Container>
     </AppLayout>
