@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AppLayout } from "@/components/layout/app-layout";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -16,29 +17,66 @@ import {
 import { ArrowForwardIos, LocationOn } from "@mui/icons-material";
 import Image from "next/image";
 
-export default function TaskPage() {
+export default function TasksPage() {
   const supabase = createClient();
+  const router = useRouter();
+
   const [tasks, setTasks] = useState<any[]>([]);
   const [filter, setFilter] = useState<"active" | "done">("active");
   const [loading, setLoading] = useState(true);
 
+  // ✅ Fetch volunteer tasks with elder details
   useEffect(() => {
     const fetchTasks = async () => {
       const { data, error } = await supabase
         .from("volunteer_tasks")
-        .select(`*, elder_cards(*)`)
+        // 👇 Explicit join using correct foreign key (elder_id)
+        .select(
+          `
+          id,
+          status,
+          created_at,
+          selected_tasks,
+          elder_cards:elder_id (
+            id,
+            name,
+            phone,
+            location,
+            avatar_url,
+            task_type,
+            product_name,
+            product_image,
+            product_price
+          )
+        `
+        )
         .order("created_at", { ascending: false });
 
-      if (error) console.error("Fetch error:", error);
-      else setTasks(data);
+      if (error) {
+        console.error("Fetch error:", error);
+      } else {
+        setTasks(data || []);
+      }
       setLoading(false);
     };
-    fetchTasks();
-  }, [filter]);
 
+    fetchTasks();
+  }, [supabase]);
+
+  // ✅ Filter by active/done
   const filtered = tasks.filter((t) =>
     filter === "active" ? t.status === "active" : t.status === "done"
   );
+
+  // ✅ Navigate to detail page based on task type
+  const handleCardClick = (task: any) => {
+    if (!task.elder_cards) return;
+    if (task.elder_cards.task_type === "โพสต์สินค้า") {
+      router.push(`/tasks/post/${task.id}`);
+    } else {
+      router.push(`/tasks/pack/${task.id}`);
+    }
+  };
 
   return (
     <AppLayout>
@@ -52,8 +90,18 @@ export default function TaskPage() {
           mx: "auto",
         }}
       >
+        {/* Header */}
+        <Typography
+          variant="h6"
+          fontWeight={700}
+          textAlign="center"
+          mb={2}
+          sx={{ color: "#1b4332" }}
+        >
+          งานของฉัน
+        </Typography>
 
-        {/* Toggle buttons */}
+        {/* Toggle Filter */}
         <Box display="flex" justifyContent="center" mb={2}>
           <ToggleButtonGroup
             color="success"
@@ -81,7 +129,7 @@ export default function TaskPage() {
           </ToggleButtonGroup>
         </Box>
 
-        {/* Loading / Empty */}
+        {/* Loading */}
         {loading ? (
           <Box textAlign="center" mt={4}>
             <CircularProgress color="success" />
@@ -93,19 +141,26 @@ export default function TaskPage() {
         ) : (
           filtered.map((t) => {
             const elder = t.elder_cards;
+            if (!elder) return null;
+
             return (
               <Card
                 key={t.id}
+                onClick={() => handleCardClick(t)}
                 sx={{
                   borderRadius: 3,
                   boxShadow: 1,
                   mb: 2,
-                  p: 0.5,
-                  position: "relative",
+                  cursor: "pointer",
+                  transition: "transform 0.15s ease, box-shadow 0.15s ease",
+                  "&:hover": {
+                    transform: "translateY(-3px)",
+                    boxShadow: 3,
+                  },
                 }}
               >
                 <CardContent sx={{ display: "flex", gap: 2 }}>
-                  {/* Left: avatar or product */}
+                  {/* Left image/avatar */}
                   {elder.task_type === "โพสต์สินค้า" ? (
                     <Avatar
                       src={elder.avatar_url || "/placeholder-avatar.png"}
@@ -130,13 +185,11 @@ export default function TaskPage() {
                     )
                   )}
 
-                  {/* Middle */}
+                  {/* Middle Info */}
                   <Box flex={1}>
                     {elder.task_type === "โพสต์สินค้า" ? (
                       <>
-                        <Typography fontWeight={600}>
-                          {elder.name}
-                        </Typography>
+                        <Typography fontWeight={600}>{elder.name}</Typography>
                         <Typography variant="caption" color="text.secondary">
                           {elder.phone}
                         </Typography>
@@ -158,39 +211,23 @@ export default function TaskPage() {
                           variant="caption"
                           sx={{
                             display: "inline-block",
-                            bgcolor:
-                              t.status === "active"
-                                ? "#dcfce7"
-                                : "#e0e7ff",
-                            color:
-                              t.status === "active"
-                                ? "#16a34a"
-                                : "#1e3a8a",
+                            bgcolor: "#dcfce7",
+                            color: "#16a34a",
                             px: 1,
                             py: 0.2,
                             borderRadius: 1,
                             mt: 0.5,
                           }}
                         >
-                          {t.status === "active"
-                            ? "โพสต์สินค้า"
-                            : "โพสต์เสร็จแล้ว"}
+                          โพสต์สินค้า
                         </Typography>
                       </>
                     ) : (
                       <>
-                        <Typography
-                          fontWeight={600}
-                          color="text.primary"
-                          sx={{ fontSize: "0.95rem" }}
-                        >
+                        <Typography fontWeight={600}>
                           {elder.product_name}
                         </Typography>
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{ mb: 0.5 }}
-                        >
+                        <Typography variant="body2" color="text.secondary">
                           ฿{elder.product_price}/ชิ้น
                         </Typography>
                         <Typography
@@ -216,31 +253,11 @@ export default function TaskPage() {
                             {elder.name}
                           </Typography>
                         </Box>
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            display: "inline-block",
-                            bgcolor:
-                              t.status === "active"
-                                ? "#dcfce7"
-                                : "#e0e7ff",
-                            color:
-                              t.status === "active"
-                                ? "#16a34a"
-                                : "#1e3a8a",
-                            px: 1,
-                            py: 0.2,
-                            borderRadius: 1,
-                            mt: 0.5,
-                          }}
-                        >
-                          แพ็คสินค้า
-                        </Typography>
                       </>
                     )}
                   </Box>
 
-                  {/* Arrow */}
+                  {/* Right arrow */}
                   <ArrowForwardIos sx={{ fontSize: 16, color: "#9ca3af" }} />
                 </CardContent>
               </Card>

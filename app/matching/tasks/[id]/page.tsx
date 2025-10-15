@@ -16,6 +16,7 @@ import { ArrowBack } from "@mui/icons-material";
 import Image from "next/image";
 import { AppLayout } from "@/components/layout/app-layout";
 import ExpandableText from "@/components/ui/ExpandableText";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function TaskDetailPage() {
   const params = useParams();
@@ -26,6 +27,7 @@ export default function TaskDetailPage() {
   const [loading, setLoading] = useState(true);
   const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
   const [adding, setAdding] = useState(false);
+  const [successPopup, setSuccessPopup] = useState(false); // ✅ Popup state
 
   useEffect(() => {
     const fetchElder = async () => {
@@ -46,7 +48,6 @@ export default function TaskDetailPage() {
     try {
       setAdding(true);
 
-      // ✅ get logged-in user
       const {
         data: { user },
         error: userError,
@@ -58,7 +59,6 @@ export default function TaskDetailPage() {
         return;
       }
 
-      // ✅ insert into volunteer_tasks
       const { error } = await supabase.from("volunteer_tasks").insert({
         elder_id: elder.id,
         volunteer_id: user.id,
@@ -70,8 +70,12 @@ export default function TaskDetailPage() {
         console.error("Insert error:", error);
         alert("เกิดข้อผิดพลาดขณะเพิ่มงาน");
       } else {
-        alert("เพิ่ม task สำเร็จ!");
-        router.push("/tasks");
+        // ✅ Show animated popup
+        setSuccessPopup(true);
+        setTimeout(() => {
+          setSuccessPopup(false);
+          router.push("/tasks");
+        }, 2000);
       }
     } finally {
       setAdding(false);
@@ -109,7 +113,7 @@ export default function TaskDetailPage() {
 
   return (
     <AppLayout>
-      <Box className="min-h-screen bg-white">
+      <Box className="min-h-screen bg-white relative overflow-hidden">
         {/* Header */}
         <Box className="flex items-center p-4 border-b border-gray-200">
           <Button onClick={() => router.back()}>
@@ -123,7 +127,6 @@ export default function TaskDetailPage() {
         {elder.task_type === "โพสต์สินค้า" ? (
           // 🟢 Volunteer_post_product layout
           <Box className="p-4 space-y-4">
-            {/* Elder Info */}
             <Box className="flex items-center space-x-3">
               <Avatar src={elder.avatar_url} sx={{ width: 56, height: 56 }} />
               <Box>
@@ -139,7 +142,6 @@ export default function TaskDetailPage() {
               </Box>
             </Box>
 
-            {/* Product Section */}
             <Card variant="outlined">
               <CardContent>
                 <Typography variant="subtitle1" fontWeight="bold">
@@ -250,6 +252,57 @@ export default function TaskDetailPage() {
             </Box>
           </Box>
         )}
+
+        {/* ✅ Success Popup Animation */}
+        <AnimatePresence>
+          {successPopup && (
+            <motion.div
+              className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <motion.div
+                className="bg-white rounded-2xl p-6 flex flex-col items-center shadow-xl"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 200, damping: 15 }}
+              >
+                <motion.div
+                  className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mb-3"
+                  initial={{ scale: 0 }}
+                  animate={{
+                    scale: [0, 1.2, 1],
+                    boxShadow: ["0 0 0px #16a34a", "0 0 15px #16a34a", "0 0 0px #16a34a"],
+                  }}
+                  transition={{ duration: 0.8 }}
+                >
+                  <motion.svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2.5}
+                    stroke="#16a34a"
+                    className="w-10 h-10"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 0.8, ease: "easeInOut", delay: 0.2 }}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M4.5 12.75l6 6 9-13.5"
+                    />
+                  </motion.svg>
+                </motion.div>
+                <Typography variant="h6" fontWeight="bold" color="success.main">
+                  เพิ่มสำเร็จ!
+                </Typography>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </Box>
     </AppLayout>
   );

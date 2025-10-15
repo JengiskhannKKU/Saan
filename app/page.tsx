@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation"; // ✅ add this
+import { useRouter } from "next/navigation";
 import { AppLayout } from "@/components/layout/app-layout";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -14,6 +14,7 @@ import {
   IconButton,
   Container,
   CircularProgress,
+  Skeleton,
 } from "@mui/material";
 import { ArrowForwardIos, LocationOn } from "@mui/icons-material";
 import Image from "next/image";
@@ -35,11 +36,23 @@ type ElderCard = {
 
 export default function HomePage() {
   const supabase = createClient();
-  const router = useRouter(); // ✅ router instance
+  const router = useRouter();
+
   const [elders, setElders] = useState<ElderCard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [userData, setUserData] = useState<any>(null); // ✅ Real user data
+  const [loadingUser, setLoadingUser] = useState(true);
 
   useEffect(() => {
+    // ✅ Fetch authenticated user
+    const fetchUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setUserData(user);
+      setLoadingUser(false);
+    };
+
     const fetchElders = async () => {
       const { data, error } = await supabase
         .from("elder_cards")
@@ -48,14 +61,13 @@ export default function HomePage() {
 
       if (error) console.error("Error fetching elders:", error);
       else setElders(data as ElderCard[]);
-
       setIsLoading(false);
     };
 
+    fetchUser();
     fetchElders();
-  }, []);
+  }, [supabase]);
 
-  // ✅ redirect handler
   const handleCardClick = (id: string) => {
     router.push(`/matching/tasks/${id}`);
   };
@@ -73,34 +85,46 @@ export default function HomePage() {
           gap: 3,
         }}
       >
-        {/* Greeting Card */}
+        {/* ✅ Greeting Card with Real User */}
         <Card sx={{ borderRadius: 3, boxShadow: 1 }}>
           <CardContent>
-            <Box display="flex" alignItems="center" gap={2}>
-              <Avatar
-                src="/profile.jpg"
-                sx={{
-                  width: 56,
-                  height: 56,
-                  border: "2px solid #16a34a",
-                }}
-              />
-              <Box>
-                <Typography variant="subtitle1" fontWeight={600}>
-                  สวัสดี{" "}
-                  <Box component="span" sx={{ color: "#16a34a" }}>
-                    คุณปีเตอร์ พาร์เกอร์
-                  </Box>
-                </Typography>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  display="block"
-                >
-                  เหลืออีก <strong>2 วัน</strong> ก่อนถึงวันสิ้นเดือน
-                </Typography>
+            {loadingUser ? (
+              <Box display="flex" alignItems="center" gap={2}>
+                <Skeleton variant="circular" width={56} height={56} />
+                <Box flex={1}>
+                  <Skeleton width="70%" height={24} />
+                  <Skeleton width="50%" height={16} />
+                </Box>
               </Box>
-            </Box>
+            ) : (
+              <Box display="flex" alignItems="center" gap={2}>
+                <Avatar
+                  src={userData?.user_metadata?.avatar_url || "/profile.jpg"}
+                  sx={{
+                    width: 56,
+                    height: 56,
+                    border: "2px solid #16a34a",
+                  }}
+                />
+                <Box>
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    สวัสดี{" "}
+                    <Box component="span" sx={{ color: "#16a34a" }}>
+                      {userData?.user_metadata?.full_name ||
+                        userData?.email?.split("@")[0] ||
+                        "ผู้ใช้ใหม่"}
+                    </Box>
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    display="block"
+                  >
+                    เหลืออีก <strong>2 วัน</strong> ก่อนถึงวันสิ้นเดือน
+                  </Typography>
+                </Box>
+              </Box>
+            )}
 
             <Box mt={2}>
               <LinearProgress
@@ -125,7 +149,7 @@ export default function HomePage() {
           </CardContent>
         </Card>
 
-        {/* Banner */}
+        {/* ✅ Banner (Dynamic name) */}
         <Card
           sx={{
             background: "linear-gradient(to right, #22c55e, #16a34a)",
@@ -137,9 +161,11 @@ export default function HomePage() {
         >
           <CardContent sx={{ position: "relative", zIndex: 2 }}>
             <Typography variant="h6" fontWeight="700" mb={1}>
-              ทุกการช่วยเหลือของคุณ {"ปีเตอร์ พาร์เกอร์"}
-              <br />
-              คือพลังสนับสนุนการใช้ผู้สูงอายุ
+              ทุกการช่วยเหลือของคุณ{" "}
+              {userData?.user_metadata?.full_name ||
+                userData?.email?.split("@")[0] ||
+                "อาสาสมัคร"}{" "}
+              คือพลังสนับสนุนผู้สูงอายุ
             </Typography>
             <Box display="flex" alignItems="center" gap={1}>
               <Box
@@ -186,7 +212,7 @@ export default function HomePage() {
           </Box>
         </Card>
 
-        {/* Elderly List */}
+        {/* ✅ Elderly List (unchanged) */}
         <Box>
           <Box
             display="flex"
@@ -214,7 +240,7 @@ export default function HomePage() {
             elders.map((elder) => (
               <Card
                 key={elder.id}
-                onClick={() => handleCardClick(elder.id)} // ✅ clickable
+                onClick={() => handleCardClick(elder.id)}
                 sx={{
                   borderRadius: 3,
                   boxShadow: 1,
@@ -260,16 +286,11 @@ export default function HomePage() {
                         >
                           โพสต์สินค้า
                         </Typography>
-                        {elder.task_type === "โพสต์สินค้า" &&
-                          elder.product_descriptions?.map((desc, i) => (
-                            <Typography
-                              key={i}
-                              variant="caption"
-                              display="block"
-                            >
-                              • {desc}
-                            </Typography>
-                          ))}
+                        {elder.product_descriptions?.map((desc, i) => (
+                          <Typography key={i} variant="caption" display="block">
+                            • {desc}
+                          </Typography>
+                        ))}
 
                         {elder.location && (
                           <Typography
