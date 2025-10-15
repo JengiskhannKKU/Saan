@@ -1,71 +1,101 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation"; // ✅ import router
 import { AppLayout } from "@/components/layout/app-layout";
+import { createClient } from "@/lib/supabase/client";
 import {
   Box,
   Typography,
   Avatar,
   Card,
   CardContent,
-  Button,
   IconButton,
   ToggleButton,
   ToggleButtonGroup,
+  InputBase,
+  MenuItem,
+  Select,
+  CircularProgress,
+  Paper,
 } from "@mui/material";
-import { FilterList, ArrowForwardIos, LocationOn } from "@mui/icons-material";
+import { FilterList, ArrowForwardIos, LocationOn, Search } from "@mui/icons-material";
 import Image from "next/image";
-import { useState } from "react";
+import ExpandableText from "@/components/ui/ExpandableText";
 
-export default function ElderlyPage() {
-  const [filter, setFilter] = useState("ทั้งหมด");
+type ElderCard = {
+  id: string;
+  task_type: "โพสต์สินค้า" | "แพ็คของ";
+  avatar_url: string | null;
+  name: string;
+  phone: string;
+  location: string;
+  distance_km?: number | null;
+  product_name?: string | null;
+  product_image?: string | null;
+  product_price?: number | null;
+  product_descriptions?: string[] | null;
+};
 
-  const handleFilterChange = (
-    event: React.MouseEvent<HTMLElement>,
-    newFilter: string | null
-  ) => {
-    if (newFilter !== null) setFilter(newFilter);
+export default function MatchingPage() {
+  const supabase = createClient();
+  const router = useRouter(); // ✅ router for navigation
+
+  const [elders, setElders] = useState<ElderCard[]>([]);
+  const [filtered, setFiltered] = useState<ElderCard[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [taskFilter, setTaskFilter] = useState<"ทั้งหมด" | "โพสต์สินค้า" | "แพ็คของ">("ทั้งหมด");
+  const [distanceFilter, setDistanceFilter] = useState<number | "ทั้งหมด">("ทั้งหมด");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // ✅ Fetch data from Supabase
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data, error } = await supabase.from("elder_cards").select("*");
+      if (error) console.error("Fetch error:", error);
+      else {
+        const dataWithDistance = data.map((e: any) => ({
+          ...e,
+          distance_km: e.distance_km || Math.random() * 80,
+        }));
+        setElders(dataWithDistance);
+        setFiltered(dataWithDistance);
+      }
+      setIsLoading(false);
+    };
+    fetchData();
+  }, []);
+
+  // ✅ Apply filters
+  useEffect(() => {
+    let result = [...elders];
+    if (taskFilter !== "ทั้งหมด") {
+      result = result.filter((e) => e.task_type === taskFilter);
+    }
+    if (distanceFilter !== "ทั้งหมด") {
+      result = result.filter((e) => (e.distance_km ?? 0) <= distanceFilter);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (e) =>
+          e.name.toLowerCase().includes(q) ||
+          e.location.toLowerCase().includes(q) ||
+          (e.product_name?.toLowerCase().includes(q) ?? false)
+      );
+    }
+    setFiltered(result);
+  }, [taskFilter, distanceFilter, searchQuery, elders]);
+
+  const handleTaskFilter = (_: any, newValue: any) => {
+    if (newValue !== null) setTaskFilter(newValue);
   };
 
-  const elders = [
-    {
-      name: "คุณบุญสม ศิริมิตร จิตตา",
-      phone: "0912345678",
-      distance: "750 ม.",
-      type: "โพสต์สินค้า",
-      avatar: "/elder1.jpg",
-      products: [
-        "ผลงานหัตถกรรมไม้ไผ่ทำแปรง",
-        "พวงกุญแจและไม้ลุงกลึง",
-      ],
-    },
-    {
-      name: "คุณดอกลาย บานะ",
-      phone: "0912345679",
-      distance: "1.2 กม.",
-      type: "เพิ่มสินค้า",
-      avatar: "/elder2.jpg",
-      products: ["ตะกร้าผ้ารักษ์โลก"],
-    },
-  ];
-
-  const products = [
-    {
-      name: "พวงกุญแจของชาวสานชลธี",
-      price: "฿15/ชิ้น",
-      status: "พร้อมส่ง",
-      owner: "คุณสมจิตร",
-      distance: "2 กม.",
-      images: ["/product1.jpg", "/profile.jpg"],
-    },
-    {
-      name: "พวงกุญแจของชาวสานชลธี",
-      price: "฿20/ชิ้น",
-      status: "พร้อมส่ง",
-      owner: "คุณบุญศรี",
-      distance: "2 กม.",
-      images: ["/product2.jpg", "/elder2.jpg"],
-    },
-  ];
+  // ✅ Function to navigate to task detail
+  const handleCardClick = (id: string) => {
+    router.push(`/matching/tasks/${id}`);
+  };
 
   return (
     <AppLayout>
@@ -80,12 +110,7 @@ export default function ElderlyPage() {
         }}
       >
         {/* Header */}
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          mb={2}
-        >
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
           <Typography variant="h6" fontWeight={600}>
             ผู้สูงอายุที่อยู่ใกล้คุณ
           </Typography>
@@ -94,16 +119,36 @@ export default function ElderlyPage() {
           </IconButton>
         </Box>
 
+        {/* Search Bar */}
+        <Paper
+          component="form"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            borderRadius: 3,
+            px: 2,
+            py: 0.5,
+            mb: 2,
+            boxShadow: 1,
+          }}
+        >
+          <Search sx={{ color: "#16a34a", mr: 1 }} />
+          <InputBase
+            placeholder="ค้นหาชื่อหรือสินค้า..."
+            fullWidth
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </Paper>
+
         {/* Filter Buttons */}
-        <Box display="flex" justifyContent="space-between" alignItems="center">
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
           <ToggleButtonGroup
             color="primary"
-            value={filter}
+            value={taskFilter}
             exclusive
-            onChange={handleFilterChange}
+            onChange={handleTaskFilter}
             sx={{
-              display: "flex",
-              flexWrap: "wrap",
               "& .MuiToggleButton-root": {
                 textTransform: "none",
                 fontWeight: 500,
@@ -121,146 +166,139 @@ export default function ElderlyPage() {
           >
             <ToggleButton value="ทั้งหมด">ทั้งหมด</ToggleButton>
             <ToggleButton value="โพสต์สินค้า">โพสต์สินค้า</ToggleButton>
-            <ToggleButton value="เพิ่มสินค้า">เพิ่มสินค้า</ToggleButton>
+            <ToggleButton value="แพ็คของ">แพ็คของ</ToggleButton>
           </ToggleButtonGroup>
+
+          {/* Distance Filter */}
+          <Select
+            size="small"
+            value={distanceFilter}
+            onChange={(e) => setDistanceFilter(e.target.value as any)}
+            sx={{
+              minWidth: 100,
+              height: 36,
+              ml: 1,
+              borderRadius: 2,
+              "& .MuiOutlinedInput-notchedOutline": { borderColor: "#16a34a" },
+              "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#16a34a" },
+              "& .MuiSelect-icon": { color: "#16a34a" },
+            }}
+          >
+            <MenuItem value="ทั้งหมด">ทั้งหมด</MenuItem>
+            <MenuItem value={20}>ภายใน 20 กม.</MenuItem>
+            <MenuItem value={50}>ภายใน 50 กม.</MenuItem>
+            <MenuItem value={80}>ภายใน 80 กม.</MenuItem>
+          </Select>
         </Box>
 
-        {/* Elderly List */}
-        <Box mt={3}>
-          {elders
-            .filter((e) => filter === "ทั้งหมด" || e.type === filter)
-            .map((elder, i) => (
-              <Card
-                key={i}
-                sx={{
-                  borderRadius: 3,
-                  boxShadow: 1,
-                  mb: 2,
-                }}
-              >
-                <CardContent
-                  sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}
-                >
-                  <Avatar
-                    src={elder.avatar}
-                    sx={{
-                      width: 56,
-                      height: 56,
-                      border: "2px solid #16a34a",
-                    }}
-                  />
-                  <Box flex={1}>
-                    <Typography fontWeight={600}>{elder.name}</Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {elder.phone} | {elder.distance}
-                    </Typography>
-
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        display: "inline-block",
-                        bgcolor: "#dcfce7",
-                        color: "#16a34a",
-                        px: 1,
-                        py: 0.2,
-                        borderRadius: 1,
-                        ml: 1,
-                        fontWeight: 500,
-                      }}
-                    >
-                      {elder.type}
-                    </Typography>
-
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      mt={0.5}
-                      fontWeight={500}
-                    >
-                      สินค้า
-                    </Typography>
-                    {elder.products.map((p, idx) => (
-                      <Typography key={idx} variant="caption" display="block">
-                        • {p}
-                      </Typography>
-                    ))}
-                  </Box>
-                  <ArrowForwardIos sx={{ fontSize: 16, color: "#9ca3af" }} />
-                </CardContent>
-              </Card>
-            ))}
-        </Box>
-
-        {/* Product Cards */}
-        <Box mt={2}>
-          {products.map((prod, idx) => (
+        {/* Elder List */}
+        {isLoading ? (
+          <Box textAlign="center" mt={4}>
+            <CircularProgress color="success" />
+          </Box>
+        ) : filtered.length === 0 ? (
+          <Typography textAlign="center" color="text.secondary" mt={4}>
+            ไม่พบผู้สูงอายุที่ตรงกับเงื่อนไข
+          </Typography>
+        ) : (
+          filtered.map((elder) => (
             <Card
-              key={idx}
+              key={elder.id}
+              onClick={() => handleCardClick(elder.id)} // ✅ click redirect
               sx={{
                 borderRadius: 3,
                 boxShadow: 1,
                 mb: 2,
+                cursor: "pointer",
+                transition: "transform 0.15s ease, box-shadow 0.15s ease",
+                "&:hover": {
+                  transform: "translateY(-3px)",
+                  boxShadow: 3,
+                },
               }}
             >
-              <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Image
-                  src={prod.images[0]}
-                  alt={prod.name}
-                  width={80}
-                  height={80}
-                  style={{ borderRadius: 10, objectFit: "cover" }}
+              <CardContent sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
+                <Avatar
+                  src={elder.avatar_url || "/placeholder-avatar.png"}
+                  sx={{ width: 56, height: 56, border: "2px solid #16a34a" }}
                 />
                 <Box flex={1}>
-                  <Typography fontWeight={600}>{prod.name}</Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    display="block"
-                  >
-                    {prod.price}
+                  <Typography fontWeight={600}>{elder.name}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {elder.phone}
                   </Typography>
 
                   <Typography
                     variant="caption"
                     sx={{
+                      display: "inline-block",
                       bgcolor: "#dcfce7",
                       color: "#16a34a",
                       px: 1,
                       py: 0.2,
                       borderRadius: 1,
+                      ml: 1,
                       fontWeight: 500,
-                      display: "inline-block",
-                      mt: 0.3,
                     }}
                   >
-                    {prod.status}
+                    {elder.task_type}
                   </Typography>
 
-                  <Box mt={0.5} display="flex" alignItems="center" gap={1}>
-                    {prod.images.map((img, i) => (
-                      <Avatar
-                        key={i}
-                        src={img}
-                        sx={{ width: 24, height: 24, border: "2px solid white" }}
-                      />
+                  {/* Descriptions */}
+                  {elder.task_type === "โพสต์สินค้า" &&
+                    elder.product_descriptions?.map((desc, i) => (
+                      <Typography key={i} variant="caption" display="block">
+                        • {desc}
+                      </Typography>
                     ))}
+
+                  {elder.task_type === "แพ็คของ" && (
+                    <Box mt={1}>
+                      {elder.product_image && (
+                        <Image
+                          src={elder.product_image}
+                          alt={elder.product_name || "product"}
+                          width={70}
+                          height={70}
+                          style={{ borderRadius: 10, objectFit: "cover" }}
+                        />
+                      )}
+                      {elder.product_name && (
+                        <Typography fontWeight={600} variant="body2">
+                          {elder.product_name}
+                        </Typography>
+                      )}
+                      {elder.product_price && (
+                        <Typography variant="caption" color="text.secondary">
+                          {elder.product_price} บาท
+                        </Typography>
+                      )}
+                    </Box>
+                  )}
+
+                  {elder.product_descriptions?.length ? (
+                    <ExpandableText text={elder.product_descriptions.join(" ")} maxChars={150} />
+                  ) : null}
+
+                  {elder.distance_km && (
                     <Typography
                       variant="caption"
                       color="text.secondary"
                       display="flex"
                       alignItems="center"
                       gap={0.3}
+                      mt={0.5}
                     >
                       <LocationOn fontSize="inherit" color="success" />{" "}
-                      {prod.distance}
+                      {elder.distance_km.toFixed(1)} กม.
                     </Typography>
-                  </Box>
+                  )}
                 </Box>
                 <ArrowForwardIos sx={{ fontSize: 16, color: "#9ca3af" }} />
               </CardContent>
             </Card>
-          ))}
-        </Box>
+          ))
+        )}
       </Box>
     </AppLayout>
   );

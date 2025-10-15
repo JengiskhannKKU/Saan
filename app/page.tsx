@@ -294,16 +294,6 @@ export default function HomePage() {
                             {elder.product_name}
                           </Typography>
                         )}
-                        {elder.product_price && (
-                          <Typography variant="caption" color="text.secondary">
-                            ราคา {elder.product_price} บาท
-                          </Typography>
-                        )}
-                        {elder.market_share && (
-                          <Typography variant="caption" color="text.secondary">
-                            • ส่วนแบ่งตลาด {elder.market_share}%
-                          </Typography>
-                        )}
                         {elder.product_descriptions?.length ? (
                           <ExpandableText
                             text={elder.product_descriptions.join(" ")}
