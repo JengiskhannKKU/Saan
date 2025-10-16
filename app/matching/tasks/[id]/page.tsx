@@ -168,7 +168,7 @@ export default function TaskDetailPage() {
                     color="success"
                     fullWidth
                     onClick={() => handleToggleTask("แพ็คสินค้า")}
-                    sx={{ borderRadius: "12px", fontWeight: 600, borderWidth: 2 , mt: 4}}
+                    sx={{ borderRadius: "12px", fontWeight: 600, borderWidth: 2 , mt: 2}}
                   >
                     แพ็คสินค้า
                   </Button>
