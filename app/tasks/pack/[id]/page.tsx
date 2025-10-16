@@ -181,7 +181,7 @@ export default function PackTaskDetailPage() {
           >
             <CardContent>
               <Typography variant="body2" fontWeight={600}>
-                ปริญ มั่นยืนดี
+                ศรีสมร จิตตา
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 10 ม.5 บ้านฝั่งแดง ต.ในเมือง จ.ขอนแก่น 40002
