@@ -280,7 +280,7 @@ export default function MatchingPage() {
                     <ExpandableText text={elder.product_descriptions.join(" ")} maxChars={150} />
                   ) : null}
 
-                  {elder.distance_km && (
+                  {/* {elder.distance_km && (
                     <Typography
                       variant="caption"
                       color="text.secondary"
@@ -292,7 +292,7 @@ export default function MatchingPage() {
                       <LocationOn fontSize="inherit" color="success" />{" "}
                       {elder.distance_km.toFixed(1)} กม.
                     </Typography>
-                  )}
+                  )} */}
                 </Box>
                 <ArrowForwardIos sx={{ fontSize: 16, color: "#9ca3af" }} />
               </CardContent>

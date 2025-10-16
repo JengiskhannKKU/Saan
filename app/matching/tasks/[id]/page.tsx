@@ -164,13 +164,13 @@ export default function TaskDetailPage() {
                     โพสต์สินค้า
                   </Button>
                   <Button
-                    variant={isSelected("เพิ่มสินค้า") ? "contained" : "outlined"}
+                    variant={isSelected("แพ็คสินค้า") ? "contained" : "outlined"}
                     color="success"
                     fullWidth
-                    onClick={() => handleToggleTask("เพิ่มสินค้า")}
+                    onClick={() => handleToggleTask("แพ็คสินค้า")}
                     sx={{ borderRadius: "12px", fontWeight: 600, borderWidth: 2 }}
                   >
-                    เพิ่มสินค้า
+                    แพ็คสินค้า
                   </Button>
                 </Box>
               </CardContent>
