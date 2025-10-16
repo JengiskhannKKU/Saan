@@ -64,6 +64,8 @@ export default function HomePage() {
       setIsLoading(false);
     };
 
+    //git push
+
     fetchUser();
     fetchElders();
   }, [supabase]);
